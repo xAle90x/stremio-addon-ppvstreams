@@ -15,7 +15,7 @@ async function getLiveFootballCatalog(id: string) {
 		const matches = await fetch("https://ppv.land/api/streams")
 		const response = await matches.json()
 		const results: IPPVLandStream[] = response.streams ?? []
-		const live = results.filter((a) => a.category.toLowerCase() == "football").map((a) => a.streams).flat(2)
+		const live = results.filter((a) => a.category.toLowerCase() == id).map((a) => a.streams).flat(2)
 		return live
 	} catch (error) {
 		return []
@@ -32,7 +32,7 @@ async function getMovieStrams(id:string):Promise<Stream []> {
 }
 const builder = new addonBuilder(manifest)
 builder.defineCatalogHandler(async ({ id }) => {
-	const results: MetaPreview[] = (await getLiveFootballCatalog(id)).map((resp) => ({ id: resp.id.toString(), name: resp.name, type: "channel", background: resp.poster, description: resp.name, poster: resp.poster, posterShape: "regular", logo: resp.poster }))
+	const results: MetaPreview[] = (await getLiveFootballCatalog(id)).map((resp) => ({ id: resp.id.toString(), name: resp.name, type: "channel", background: resp.poster, description: resp.name, poster: resp.poster, posterShape: "landscape", logo: resp.poster }))
 	return {
 		metas: results
 	}
