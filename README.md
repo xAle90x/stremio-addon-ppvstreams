@@ -11,7 +11,6 @@ This Stremio plugin provides access to **Pay-Per-View (PPV) events** and **live 
   - Darts
   - Rugby
 - 🎟️ **PPV Events**: Watch exclusive pay-per-view events without additional subscriptions.
-- 📅 **Schedules and Notifications**: Get notified about upcoming events and live sports schedules.
 
 ## Installation
 
