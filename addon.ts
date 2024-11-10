@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node"
 import {
   addonBuilder,
   Manifest,
@@ -41,6 +42,7 @@ async function getLiveFootballCatalog(id: string) {
       .flat(2)
     return live
   } catch (error) {
+	Sentry.captureException(error)
     return []
   }
 }
@@ -57,6 +59,7 @@ async function getMovieStreams(id: string): Promise<Stream[]> {
       },
     ]
   } catch (error) {
+	Sentry.captureException(error)
     return []
   }
 }
@@ -75,6 +78,7 @@ async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
       website: response.data.source,
     }
   } catch (error) {
+	Sentry.captureException(error)
     return { id: id, name: 'N/A', type: 'channel' }
   }
 }
