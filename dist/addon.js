@@ -15,7 +15,7 @@ const manifest = {
     "id": "community.ppvstreams",
     "version": "0.0.1",
     "catalogs": [{ id: "basketball", type: "channel", name: "Live Basksetball matches" }, { id: "football", name: "Live Football matches", type: "channel" }],
-    "resources": [{ name: "stream", types: ["channel"] }],
+    "resources": [{ name: "stream", types: ["channel"] }, { name: "meta", types: ['channel'] }],
     "types": ["channel"],
     "name": "ppvstreams",
     "description": "Watch live sports events and ppv streams from ppv land"
@@ -52,7 +52,7 @@ function getMovieMetaDetals(id) {
         try {
             const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
             const response = yield streams.json();
-            return { name: response.data.name, id: id, type: "channel", poster: response.data.poster, posterShape: "landscape", background: response.data.poster, language: "english", website: response.data.source };
+            return { name: response.data.name, id: id, type: "channel", poster: response.data.poster, posterShape: "landscape", background: response.data.poster, language: "english", website: response.data.source, };
         }
         catch (error) {
             return { id: id, name: "N/A", type: "channel", };
@@ -69,7 +69,7 @@ builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* (
 builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
     const meta = yield getMovieMetaDetals(id);
     return {
-        meta
+        meta,
     };
 }));
 builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
