@@ -1,4 +1,4 @@
-import { addonBuilder, Manifest, MetaPreview, Stream } from "stremio-addon-sdk"
+import { addonBuilder, Manifest, MetaDetail, MetaPreview, Stream } from "stremio-addon-sdk"
 import { IPPLandStreamDetails, IPPVLandStream } from "."
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest: Manifest = {
@@ -21,13 +21,22 @@ async function getLiveFootballCatalog(id: string) {
 		return []
 	}
 }
-async function getMovieStrams(id:string):Promise<Stream []> {
+async function getMovieStreams(id:string):Promise<Stream []> {
 	try {
 		const streams = await fetch(`https://ppv.land/api/streams/${id}`)
 		const response:IPPLandStreamDetails = await streams.json()
 		return [{name: response.data.name,url: response.data.source,title: response.data.tag,behaviorHints:{notWebReady: true} }]
 	} catch (error) {
 		return []
+	}
+}
+async function getMovieMetaDetals(id:string):Promise<MetaDetail> {
+	try {
+		const streams = await fetch(`https://ppv.land/api/streams/${id}`)
+		const response:IPPLandStreamDetails = await streams.json()
+		return {name: response.data.name,id:id,type:"channel",poster: response.data.poster,posterShape:"landscape",background:response.data.poster,language:"english",website: response.data.source }
+	} catch (error) {
+		return {id: id,name:"N/A",type:"channel",}
 	}
 }
 const builder = new addonBuilder(manifest)
@@ -37,8 +46,14 @@ builder.defineCatalogHandler(async ({ id }) => {
 		metas: results
 	}
 })
+builder.defineMetaHandler(async({id})=>{
+	const meta = await getMovieMetaDetals(id)
+	return {
+		meta
+	}
+})
 builder.defineStreamHandler(async({id})=>{
-	const streams = await getMovieStrams(id)
+	const streams = await getMovieStreams(id)
 	return {
 		streams
 	}
