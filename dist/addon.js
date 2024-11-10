@@ -27,7 +27,7 @@ function getLiveFootballCatalog(id) {
             const matches = yield fetch("https://ppv.land/api/streams");
             const response = yield matches.json();
             const results = (_a = response.streams) !== null && _a !== void 0 ? _a : [];
-            const live = results.filter((a) => a.category.toLowerCase() == "football").map((a) => a.streams).flat(2);
+            const live = results.filter((a) => a.category.toLowerCase() == id).map((a) => a.streams).flat(2);
             return live;
         }
         catch (error) {
@@ -35,7 +35,7 @@ function getLiveFootballCatalog(id) {
         }
     });
 }
-function getMovieStrams(id) {
+function getMovieStreams(id) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
@@ -47,15 +47,33 @@ function getMovieStrams(id) {
         }
     });
 }
+function getMovieMetaDetals(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
+            const response = yield streams.json();
+            return { name: response.data.name, id: id, type: "channel", poster: response.data.poster, posterShape: "landscape", background: response.data.poster, language: "english", website: response.data.source };
+        }
+        catch (error) {
+            return { id: id, name: "N/A", type: "channel", };
+        }
+    });
+}
 const builder = new stremio_addon_sdk_1.addonBuilder(manifest);
 builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
-    const results = (yield getLiveFootballCatalog(id)).map((resp) => ({ id: resp.id.toString(), name: resp.name, type: "channel", background: resp.poster, description: resp.name, poster: resp.poster, posterShape: "regular", logo: resp.poster }));
+    const results = (yield getLiveFootballCatalog(id)).map((resp) => ({ id: resp.id.toString(), name: resp.name, type: "channel", background: resp.poster, description: resp.name, poster: resp.poster, posterShape: "landscape", logo: resp.poster }));
     return {
         metas: results
     };
 }));
+builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
+    const meta = yield getMovieMetaDetals(id);
+    return {
+        meta
+    };
+}));
 builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
-    const streams = yield getMovieStrams(id);
+    const streams = yield getMovieStreams(id);
     return {
         streams
     };
