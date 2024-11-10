@@ -42,7 +42,7 @@ function getLiveFootballCatalog(id) {
             const response = yield matches.json();
             const results = (_a = response.streams) !== null && _a !== void 0 ? _a : [];
             const live = results
-                .filter(a => a.category.toLowerCase() == id)
+                .filter(a => a.category.toLowerCase() == id.toLowerCase())
                 .map(a => a.streams)
                 .flat(2);
             return live;

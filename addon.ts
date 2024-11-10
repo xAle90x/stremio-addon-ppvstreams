@@ -36,7 +36,7 @@ async function getLiveFootballCatalog(id: string) {
     const response = await matches.json()
     const results: IPPVLandStream[] = response.streams ?? []
     const live = results
-      .filter(a => a.category.toLowerCase() == id)
+      .filter(a => a.category.toLowerCase() == id.toLowerCase())
       .map(a => a.streams)
       .flat(2)
     return live
