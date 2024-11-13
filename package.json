@@ -1,6 +1,6 @@
 {
 	"name": "stremio-addon-ppvstreams",
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"description": "Watch live sports events and ppv streams from ppv land",
 	"scripts": {
 		"start": "node dist/server.js",

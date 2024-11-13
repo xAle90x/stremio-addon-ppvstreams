@@ -10,7 +10,7 @@ import { IPPLandStreamDetails, IPPVLandStream } from '.'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest: Manifest = {
   id: 'community.ppvstreams',
-  version: '0.0.2',
+  version: '0.0.3',
   catalogs: [
     { id: 'basketball', type: 'channel', name: 'Live Basketball matches' },
     { id: 'football', name: 'Live Football matches', type: 'tv' },
