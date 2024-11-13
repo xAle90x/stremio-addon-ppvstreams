@@ -3,10 +3,10 @@
 import { serveHTTP } from "stremio-addon-sdk"
 import addonInterface from "./addon"
 import * as Sentry from "@sentry/node"
+import  { nodeProfilingIntegration } from "@sentry/profiling-node"
 Sentry.init({
     dsn: "https://2faaad8d19ae0928c559d1ff0e81f093@o4504167984136192.ingest.us.sentry.io/4508274805374976",
-    integrations: [
-    ],
+    integrations: [ nodeProfilingIntegration()],
     // Tracing
     tracesSampleRate: 1.0, //  Capture 100% of the transactions
 })

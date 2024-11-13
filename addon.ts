@@ -1,4 +1,4 @@
-import * as Sentry from "@sentry/node"
+import * as Sentry from '@sentry/node'
 import {
   addonBuilder,
   Manifest,
@@ -10,13 +10,15 @@ import { IPPLandStreamDetails, IPPVLandStream } from '.'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest: Manifest = {
   id: 'community.ppvstreams',
-  version: '0.0.1',
+  version: '0.0.2',
   catalogs: [
     { id: 'basketball', type: 'channel', name: 'Live Basketball matches' },
     { id: 'football', name: 'Live Football matches', type: 'tv' },
     { id: 'Arm Wrestling', name: 'Live Arm Wrestling evens', type: 'tv' },
     { id: 'Rugby', name: 'Live rugby matches', type: 'tv' },
     { id: 'NFL', name: 'Live nfl matches', type: 'tv' },
+    { id: "Combat Sports", name: "Combat sports events", type: "tv" },
+    { id: "Wrestling", name: "Live wrestling events", type: "tv" },
     {
       id: 'Darts',
       name: 'Live darts events around the world',
@@ -29,10 +31,11 @@ const manifest: Manifest = {
   ],
   types: ['tv'],
   name: 'ppvstreams',
-  description: 'Watch live sports events and ppv streams from ppv land',
+  description: 'Stream your favorite live sports, featuring football (soccer), NFL, basketball, wrestling, darts, and more. Enjoy real-time access to popular games and exclusive events, all conveniently available in one place. This add-on is based on PPV Land.',
 }
 async function getLiveFootballCatalog(id: string) {
   try {
+    
     const matches = await fetch('https://ppv.land/api/streams')
     const response = await matches.json()
     const results: IPPVLandStream[] = response.streams ?? []
@@ -42,7 +45,7 @@ async function getLiveFootballCatalog(id: string) {
       .flat(2)
     return live
   } catch (error) {
-	Sentry.captureException(error)
+    Sentry.captureException(error)
     return []
   }
 }
@@ -52,14 +55,14 @@ async function getMovieStreams(id: string): Promise<Stream[]> {
     const response: IPPLandStreamDetails = await streams.json()
     return [
       {
-        name: response.data.name,
-        url: response.data.source,
-        title: response.data.tag,
-        behaviorHints: { notWebReady: true },
+        name: response?.data?.name ?? "N/A",
+        url: response?.data?.source ?? "N/A",
+        title: response?.data?.tag ?? "N/A",
+        behaviorHints: { notWebReady: true, },
       },
     ]
   } catch (error) {
-	Sentry.captureException(error)
+    Sentry.captureException(error)
     return []
   }
 }
@@ -68,17 +71,17 @@ async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
     const streams = await fetch(`https://ppv.land/api/streams/${id}`)
     const response: IPPLandStreamDetails = await streams.json()
     return {
-      name: response.data.name,
+      name: response.data?.name ?? "N/A",
       id: id,
       type: 'tv',
-      poster: response.data.poster,
+      poster: response?.data?.poster ?? "https://placehold.co/600x400",
       posterShape: 'landscape',
-      background: response.data.poster,
+      background: response?.data?.poster ?? "https://placehold.co/600x400",
       language: 'english',
       website: response.data.source,
     }
   } catch (error) {
-	Sentry.captureException(error)
+    Sentry.captureException(error)
     return { id: id, name: 'N/A', type: 'channel' }
   }
 }
