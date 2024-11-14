@@ -37,7 +37,7 @@ const stremio_addon_sdk_1 = require("stremio-addon-sdk");
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest = {
     id: 'community.ppvstreams',
-    version: '0.0.3',
+    version: '0.0.4',
     catalogs: [
         { id: 'basketball', type: 'channel', name: 'Live Basketball matches' },
         { id: 'football', name: 'Live Football matches', type: 'tv' },
@@ -64,13 +64,20 @@ function getLiveFootballCatalog(id) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
+            const now = Date.now();
+            const thirtyMinutes = 30 * 60 * 1000;
             const matches = yield fetch('https://ppv.land/api/streams');
             const response = yield matches.json();
             const results = (_a = response.streams) !== null && _a !== void 0 ? _a : [];
             const live = results
                 .filter(a => a.category.toLowerCase() == id.toLowerCase())
                 .map(a => a.streams)
-                .flat(2);
+                .flat(2).filter(stream => {
+                const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
+                const endsAtMs = stream.ends_at * 1000; // Convert end time to milliseconds
+                return (startsAtMs <= now && endsAtMs >= now) || // Currently in progress
+                    (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
+            });
             return live;
         }
         catch (error) {

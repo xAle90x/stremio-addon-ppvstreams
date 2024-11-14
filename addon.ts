@@ -10,7 +10,7 @@ import { IPPLandStreamDetails, IPPVLandStream } from '.'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest: Manifest = {
   id: 'community.ppvstreams',
-  version: '0.0.3',
+  version: '0.0.4',  
   catalogs: [
     { id: 'basketball', type: 'channel', name: 'Live Basketball matches' },
     { id: 'football', name: 'Live Football matches', type: 'tv' },
@@ -35,14 +35,19 @@ const manifest: Manifest = {
 }
 async function getLiveFootballCatalog(id: string) {
   try {
-    
+    const now = Date.now()
     const matches = await fetch('https://ppv.land/api/streams')
     const response = await matches.json()
     const results: IPPVLandStream[] = response.streams ?? []
     const live = results
       .filter(a => a.category.toLowerCase() == id.toLowerCase())
       .map(a => a.streams)
-      .flat(2)
+      .flat(2).filter(stream => {
+        const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
+        const endsAtMs = stream.ends_at * 1000;     // Convert end time to milliseconds
+        return (startsAtMs <= now && endsAtMs >= now) || // Currently in progress
+               (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
+    })
     return live
   } catch (error) {
     Sentry.captureException(error)
