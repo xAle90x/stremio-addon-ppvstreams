@@ -36,6 +36,7 @@ const manifest: Manifest = {
 async function getLiveFootballCatalog(id: string) {
   try {
     const now = Date.now()
+    const thirtyMinutes = 30 * 60 * 1000;
     const matches = await fetch('https://ppv.land/api/streams')
     const response = await matches.json()
     const results: IPPVLandStream[] = response.streams ?? []
