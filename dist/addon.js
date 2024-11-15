@@ -74,8 +74,8 @@ function getLiveFootballCatalog(id) {
                 .map(a => a.streams)
                 .flat(2).filter(stream => {
                 const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
-                const endsAtMs = stream.ends_at * 1000; // Convert end time to milliseconds
-                return (startsAtMs <= now && endsAtMs >= now) || // Currently in progress
+                // Convert end time to milliseconds
+                return (startsAtMs <= now) || // Currently in progress
                     (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
             });
             return live;
