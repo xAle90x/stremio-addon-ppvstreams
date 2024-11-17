@@ -37,7 +37,7 @@ const stremio_addon_sdk_1 = require("stremio-addon-sdk");
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest = {
     id: 'community.ppvstreams',
-    version: '0.0.4',
+    version: '0.0.5',
     catalogs: [
         { id: 'basketball', type: 'tv', name: 'Live Basketball matches' },
         { id: 'football', name: 'Live Football matches', type: 'tv' },
@@ -64,6 +64,7 @@ function getLiveFootballCatalog(id) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
+            const transaction = Sentry.startSpanManual({ name: `Get ${id} catalogue`, op: "http:query" }, (span) => span);
             const now = Date.now();
             const thirtyMinutes = 30 * 60 * 1000;
             const matches = yield fetch('https://ppv.land/api/streams');
@@ -78,6 +79,7 @@ function getLiveFootballCatalog(id) {
                 return (startsAtMs <= now) || // Currently in progress
                     (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
             });
+            transaction.end();
             return live;
         }
         catch (error) {
@@ -90,8 +92,10 @@ function getMovieStreams(id) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
+            const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:query" }, (span) => span);
             const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
             const response = yield streams.json();
+            transaction.end();
             return [
                 {
                     name: (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : "N/A",
@@ -111,8 +115,10 @@ function getMovieMetaDetals(id) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
+            const transaction = Sentry.startSpanManual({ name: `Get ${id} stream details`, op: "http:query" }, (span) => span);
             const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
             const response = yield streams.json();
+            transaction.end();
             return {
                 name: (_b = (_a = response.data) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : "N/A",
                 id: id,

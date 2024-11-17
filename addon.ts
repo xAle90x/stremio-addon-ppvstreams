@@ -9,8 +9,8 @@ import {
 import { IPPLandStreamDetails, IPPVLandStream } from '.'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest: Manifest = {
-  id: 'community.ppvstreams',
-  version: '0.0.4',  
+  id: 'community.ppvstreams',  
+  version: '0.0.5',  
   catalogs: [
     { id: 'basketball', type: 'tv', name: 'Live Basketball matches' },
     { id: 'football', name: 'Live Football matches', type: 'tv' },
@@ -35,6 +35,7 @@ const manifest: Manifest = {
 }
 async function getLiveFootballCatalog(id: string) {
   try {
+    const transaction = Sentry.startSpanManual({name:`Get ${id} catalogue`,op:"http:query"},(span)=>span)
     const now = Date.now()
     const thirtyMinutes = 30 * 60 * 1000;
     const matches = await fetch('https://ppv.land/api/streams')
@@ -49,6 +50,7 @@ async function getLiveFootballCatalog(id: string) {
         return (startsAtMs <= now ) || // Currently in progress
                (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
     })
+    transaction.end()
     return live
   } catch (error) {
     Sentry.captureException(error)
@@ -57,8 +59,10 @@ async function getLiveFootballCatalog(id: string) {
 }
 async function getMovieStreams(id: string): Promise<Stream[]> {
   try {
+    const transaction = Sentry.startSpanManual({name:`Get ${id} streams link`,op:"http:query"},(span)=>span)
     const streams = await fetch(`https://ppv.land/api/streams/${id}`)
     const response: IPPLandStreamDetails = await streams.json()
+    transaction.end()
     return [
       {
         name: response?.data?.name ?? "N/A",
@@ -74,8 +78,10 @@ async function getMovieStreams(id: string): Promise<Stream[]> {
 }
 async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
   try {
+    const transaction = Sentry.startSpanManual({name:`Get ${id} stream details`,op:"http:query"},(span)=>span)
     const streams = await fetch(`https://ppv.land/api/streams/${id}`)
     const response: IPPLandStreamDetails = await streams.json()
+    transaction.end()
     return {
       name: response.data?.name ?? "N/A",
       id: id,
@@ -121,4 +127,6 @@ builder.defineStreamHandler(async ({ id }) => {
     streams,
   }
 })
+
 export default builder.getInterface()
+
