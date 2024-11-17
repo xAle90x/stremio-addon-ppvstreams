@@ -9,20 +9,21 @@ import {
 import { IPPLandStreamDetails, IPPVLandStream } from '.'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest: Manifest = {
-  id: 'community.ppvstreams',  
-  version: '0.0.5',  
+  id: 'community.ppvstreams',
+  version: '0.0.5',
   catalogs: [
-    { id: 'basketball', type: 'tv', name: 'Live Basketball matches' },
-    { id: 'football', name: 'Live Football matches', type: 'tv' },
-    { id: 'Arm Wrestling', name: 'Live Arm Wrestling evens', type: 'tv' },
-    { id: 'Rugby', name: 'Live rugby matches', type: 'tv' },
-    { id: 'NFL', name: 'Live nfl matches', type: 'tv' },
-    { id: "Combat Sports", name: "Combat sports events", type: "tv" },
-    { id: "Wrestling", name: "Live wrestling events", type: "tv" },
+    { id: 'basketball', type: 'tv', name: 'Live Basketball matches', extra: [{ name: "search", isRequired: false }] },
+    { id: 'football', name: 'Live Football matches', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: 'Arm Wrestling', name: 'Live Arm Wrestling evens', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: 'Rugby', name: 'Live rugby matches', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: 'NFL', name: 'Live nfl matches', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: "Combat Sports", name: "Combat sports events", type: "tv", extra: [{ name: "search", isRequired: false }] },
+    { id: "Wrestling", name: "Live wrestling events", type: "tv", extra: [{ name: "search", isRequired: false }] },
     {
       id: 'Darts',
       name: 'Live darts events around the world',
       type: 'tv',
+      extra: [{ name: "search", isRequired: false }]
     },
   ],
   resources: [
@@ -33,9 +34,9 @@ const manifest: Manifest = {
   name: 'ppvstreams',
   description: 'Stream your favorite live sports, featuring football (soccer), NFL, basketball, wrestling, darts, and more. Enjoy real-time access to popular games and exclusive events, all conveniently available in one place. This add-on is based on PPV Land.',
 }
-async function getLiveFootballCatalog(id: string) {
+async function getLiveFootballCatalog(id: string, search?: string): Promise<IPPVLandStream['streams']> {
   try {
-    const transaction = Sentry.startSpanManual({name:`Get ${id} catalogue`,op:"http:query"},(span)=>span)
+    const transaction = Sentry.startSpanManual({ name: `Get ${id} catalogue`, op: "http:query" }, (span) => span)
     const now = Date.now()
     const thirtyMinutes = 30 * 60 * 1000;
     const matches = await fetch('https://ppv.land/api/streams')
@@ -46,10 +47,14 @@ async function getLiveFootballCatalog(id: string) {
       .map(a => a.streams)
       .flat(2).filter(stream => {
         const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
-          // Convert end time to milliseconds
-        return (startsAtMs <= now ) || // Currently in progress
-               (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
-    })
+        // Convert end time to milliseconds
+        return (startsAtMs <= now) || // Currently in progress
+          (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
+      })
+    if (search) {
+      const regEx = RegExp(search, 'i')
+      return live.filter((a) => regEx.test(a.name) || regEx.test(a.category_name) || regEx.test(a.tag))
+    }
     transaction.end()
     return live
   } catch (error) {
@@ -59,7 +64,7 @@ async function getLiveFootballCatalog(id: string) {
 }
 async function getMovieStreams(id: string): Promise<Stream[]> {
   try {
-    const transaction = Sentry.startSpanManual({name:`Get ${id} streams link`,op:"http:query"},(span)=>span)
+    const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:query" }, (span) => span)
     const streams = await fetch(`https://ppv.land/api/streams/${id}`)
     const response: IPPLandStreamDetails = await streams.json()
     transaction.end()
@@ -78,7 +83,7 @@ async function getMovieStreams(id: string): Promise<Stream[]> {
 }
 async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
   try {
-    const transaction = Sentry.startSpanManual({name:`Get ${id} stream details`,op:"http:query"},(span)=>span)
+    const transaction = Sentry.startSpanManual({ name: `Get ${id} stream details`, op: "http:query" }, (span) => span)
     const streams = await fetch(`https://ppv.land/api/streams/${id}`)
     const response: IPPLandStreamDetails = await streams.json()
     transaction.end()
@@ -98,8 +103,8 @@ async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
   }
 }
 const builder = new addonBuilder(manifest)
-builder.defineCatalogHandler(async ({ id }) => {
-  const results: MetaPreview[] = (await getLiveFootballCatalog(id)).map(
+builder.defineCatalogHandler(async ({ id, extra }) => {
+  const results: MetaPreview[] = (await getLiveFootballCatalog(id, extra.search)).map(
     resp => ({
       id: resp.id.toString(),
       name: resp.name,

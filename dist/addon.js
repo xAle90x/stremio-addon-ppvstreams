@@ -39,17 +39,18 @@ const manifest = {
     id: 'community.ppvstreams',
     version: '0.0.5',
     catalogs: [
-        { id: 'basketball', type: 'tv', name: 'Live Basketball matches' },
-        { id: 'football', name: 'Live Football matches', type: 'tv' },
-        { id: 'Arm Wrestling', name: 'Live Arm Wrestling evens', type: 'tv' },
-        { id: 'Rugby', name: 'Live rugby matches', type: 'tv' },
-        { id: 'NFL', name: 'Live nfl matches', type: 'tv' },
-        { id: "Combat Sports", name: "Combat sports events", type: "tv" },
-        { id: "Wrestling", name: "Live wrestling events", type: "tv" },
+        { id: 'basketball', type: 'tv', name: 'Live Basketball matches', extra: [{ name: "search", isRequired: false }] },
+        { id: 'football', name: 'Live Football matches', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+        { id: 'Arm Wrestling', name: 'Live Arm Wrestling evens', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+        { id: 'Rugby', name: 'Live rugby matches', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+        { id: 'NFL', name: 'Live nfl matches', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+        { id: "Combat Sports", name: "Combat sports events", type: "tv", extra: [{ name: "search", isRequired: false }] },
+        { id: "Wrestling", name: "Live wrestling events", type: "tv", extra: [{ name: "search", isRequired: false }] },
         {
             id: 'Darts',
             name: 'Live darts events around the world',
             type: 'tv',
+            extra: [{ name: "search", isRequired: false }]
         },
     ],
     resources: [
@@ -60,7 +61,7 @@ const manifest = {
     name: 'ppvstreams',
     description: 'Stream your favorite live sports, featuring football (soccer), NFL, basketball, wrestling, darts, and more. Enjoy real-time access to popular games and exclusive events, all conveniently available in one place. This add-on is based on PPV Land.',
 };
-function getLiveFootballCatalog(id) {
+function getLiveFootballCatalog(id, search) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
@@ -79,6 +80,10 @@ function getLiveFootballCatalog(id) {
                 return (startsAtMs <= now) || // Currently in progress
                     (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
             });
+            if (search) {
+                const regEx = RegExp(search, 'i');
+                return live.filter((a) => regEx.test(a.name) || regEx.test(a.category_name) || regEx.test(a.tag));
+            }
             transaction.end();
             return live;
         }
@@ -137,8 +142,8 @@ function getMovieMetaDetals(id) {
     });
 }
 const builder = new stremio_addon_sdk_1.addonBuilder(manifest);
-builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
-    const results = (yield getLiveFootballCatalog(id)).map(resp => ({
+builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id, extra }) {
+    const results = (yield getLiveFootballCatalog(id, extra.search)).map(resp => ({
         id: resp.id.toString(),
         name: resp.name,
         type: 'tv',
