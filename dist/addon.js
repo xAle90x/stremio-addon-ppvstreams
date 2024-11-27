@@ -37,7 +37,8 @@ const stremio_addon_sdk_1 = require("stremio-addon-sdk");
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest = {
     id: 'community.ppvstreams',
-    version: '0.0.5',
+    version: '0.0.6',
+    logo: "https://res.cloudinary.com/dftgy3yfd/image/upload/v1732693733/ppv-streams_wolcio.webp",
     catalogs: [
         { id: 'basketball', type: 'tv', name: 'Live Basketball matches', extra: [{ name: "search", isRequired: false }] },
         { id: 'football', name: 'Live Football matches', type: 'tv', extra: [{ name: "search", isRequired: false }] },
