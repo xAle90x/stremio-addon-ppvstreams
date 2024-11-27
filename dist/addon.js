@@ -61,11 +61,12 @@ const manifest = {
     name: 'ppvstreams',
     description: 'Stream your favorite live sports, featuring football (soccer), NFL, basketball, wrestling, darts, and more. Enjoy real-time access to popular games and exclusive events, all conveniently available in one place. This add-on is based on PPV Land.',
 };
+const supported_id = manifest.catalogs.map((a) => a.id);
 function getLiveFootballCatalog(id, search) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         try {
-            const transaction = Sentry.startSpanManual({ name: `Get ${id} catalogue`, op: "http:query" }, (span) => span);
+            const transaction = Sentry.startSpanManual({ name: `Get ${id} catalogue`, op: "http.server" }, (span) => span);
             const now = Date.now();
             const thirtyMinutes = 30 * 60 * 1000;
             const matches = yield fetch('https://ppv.land/api/streams');
@@ -97,7 +98,7 @@ function getMovieStreams(id) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
-            const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:query" }, (span) => span);
+            const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:server" }, (span) => span);
             const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
             const response = yield streams.json();
             transaction.end();
@@ -120,7 +121,7 @@ function getMovieMetaDetals(id) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a, _b, _c, _d, _e, _f;
         try {
-            const transaction = Sentry.startSpanManual({ name: `Get ${id} stream details`, op: "http:query" }, (span) => span);
+            const transaction = Sentry.startSpanManual({ name: `Get ${id} stream details`, op: "http:server" }, (span) => span);
             const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
             const response = yield streams.json();
             transaction.end();
@@ -143,27 +144,46 @@ function getMovieMetaDetals(id) {
 }
 const builder = new stremio_addon_sdk_1.addonBuilder(manifest);
 builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id, extra }) {
-    const results = (yield getLiveFootballCatalog(id, extra.search)).map(resp => ({
-        id: resp.id.toString(),
-        name: resp.name,
-        type: 'tv',
-        background: resp.poster,
-        description: resp.name,
-        poster: resp.poster,
-        posterShape: 'landscape',
-        logo: resp.poster,
-    }));
+    let results = [];
+    // PREVENT QUERYING FOR NON PPV EVENTS
+    if (supported_id.includes(id))
+        results = (yield getLiveFootballCatalog(id, extra.search)).map(resp => ({
+            id: resp.id.toString(),
+            name: resp.name,
+            type: 'tv',
+            background: resp.poster,
+            description: resp.name,
+            poster: resp.poster,
+            posterShape: 'landscape',
+            logo: resp.poster,
+        }));
     return {
         metas: results,
     };
 }));
 builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
+    const regEx = RegExp(/^\d+$/gm);
+    if (!regEx.test(id)) {
+        return {
+            meta: {
+                id: id,
+                name: 'N/A',
+                type: "tv",
+            }
+        };
+    }
     const meta = yield getMovieMetaDetals(id);
     return {
         meta,
     };
 }));
 builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
+    const regEx = RegExp(/^\d+$/gm);
+    if (!regEx.test(id)) {
+        return {
+            streams: []
+        };
+    }
     const streams = yield getMovieStreams(id);
     return {
         streams,

@@ -5,13 +5,17 @@
 	"scripts": {
 		"start": "node dist/server.js",
 		"build": "rimraf dist && tsc",
-		"add-build":"git add dist"
+		"add-build": "git add dist"
 	},
-	"pre-commit": ["build","add-build"],
+	"pre-commit": [
+		"build",
+		"add-build"
+	],
 	"dependencies": {
 		"@sentry/node": "^8.37.1",
 		"@sentry/profiling-node": "^8.37.1",
 		"@types/stremio-addon-sdk": "^1.6.11",
+		"ioredis": "^5.4.1",
 		"stremio-addon-sdk": "1.1.x"
 	},
 	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",

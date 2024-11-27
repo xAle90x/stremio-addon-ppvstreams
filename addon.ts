@@ -6,8 +6,10 @@ import {
   MetaPreview,
   Stream,
 } from 'stremio-addon-sdk'
+
 import { IPPLandStreamDetails, IPPVLandStream } from '.'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
+
 const manifest: Manifest = {
   id: 'community.ppvstreams',
   version: '0.0.5',
@@ -34,9 +36,10 @@ const manifest: Manifest = {
   name: 'ppvstreams',
   description: 'Stream your favorite live sports, featuring football (soccer), NFL, basketball, wrestling, darts, and more. Enjoy real-time access to popular games and exclusive events, all conveniently available in one place. This add-on is based on PPV Land.',
 }
+const supported_id = manifest.catalogs.map((a) => a.id)
 async function getLiveFootballCatalog(id: string, search?: string): Promise<IPPVLandStream['streams']> {
   try {
-    const transaction = Sentry.startSpanManual({ name: `Get ${id} catalogue`, op: "http:query" }, (span) => span)
+    const transaction = Sentry.startSpanManual({ name: `Get ${id} catalogue`, op: "http.server" }, (span) => span)
     const now = Date.now()
     const thirtyMinutes = 30 * 60 * 1000;
     const matches = await fetch('https://ppv.land/api/streams')
@@ -64,7 +67,7 @@ async function getLiveFootballCatalog(id: string, search?: string): Promise<IPPV
 }
 async function getMovieStreams(id: string): Promise<Stream[]> {
   try {
-    const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:query" }, (span) => span)
+    const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:server" }, (span) => span)
     const streams = await fetch(`https://ppv.land/api/streams/${id}`)
     const response: IPPLandStreamDetails = await streams.json()
     transaction.end()
@@ -83,7 +86,7 @@ async function getMovieStreams(id: string): Promise<Stream[]> {
 }
 async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
   try {
-    const transaction = Sentry.startSpanManual({ name: `Get ${id} stream details`, op: "http:query" }, (span) => span)
+    const transaction = Sentry.startSpanManual({ name: `Get ${id} stream details`, op: "http:server" }, (span) => span)
     const streams = await fetch(`https://ppv.land/api/streams/${id}`)
     const response: IPPLandStreamDetails = await streams.json()
     transaction.end()
@@ -104,34 +107,54 @@ async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
 }
 const builder = new addonBuilder(manifest)
 builder.defineCatalogHandler(async ({ id, extra }) => {
-  const results: MetaPreview[] = (await getLiveFootballCatalog(id, extra.search)).map(
-    resp => ({
-      id: resp.id.toString(),
-      name: resp.name,
-      type: 'tv',
-      background: resp.poster,
-      description: resp.name,
-      poster: resp.poster,
-      posterShape: 'landscape',
-      logo: resp.poster,
-    }),
-  )
+  let results: MetaPreview[] = []
+  // PREVENT QUERYING FOR NON PPV EVENTS
+  if (supported_id.includes(id))
+    results = (await getLiveFootballCatalog(id, extra.search)).map(
+      resp => ({
+        id: resp.id.toString(),
+        name: resp.name,
+        type: 'tv',
+        background: resp.poster,
+        description: resp.name,
+        poster: resp.poster,
+        posterShape: 'landscape',
+        logo: resp.poster,
+      }),
+    )
   return {
     metas: results,
   }
 })
 builder.defineMetaHandler(async ({ id }) => {
+  const regEx = RegExp(/^\d+$/gm)
+  if (!regEx.test(id)) {
+    return {
+      meta: {
+        id: id,
+        name: 'N/A',
+        type: "tv",
+      }
+    }
+  }
   const meta = await getMovieMetaDetals(id)
   return {
     meta,
   }
 })
 builder.defineStreamHandler(async ({ id }) => {
+  const regEx = RegExp(/^\d+$/gm)
+  if (!regEx.test(id)) {
+    return {
+      streams: []
+    }
+  }
   const streams = await getMovieStreams(id)
   return {
     streams,
   }
 })
+
 
 export default builder.getInterface()
 
