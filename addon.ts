@@ -12,7 +12,7 @@ import { IPPLandStreamDetails, IPPVLandStream } from '.'
 
 const manifest: Manifest = {
   id: 'community.ppvstreams',
-  version: '0.0.6',
+  version: '0.0.7',
   logo: "https://res.cloudinary.com/dftgy3yfd/image/upload/v1732693733/ppv-streams_wolcio.webp",
   catalogs: [
     { id: 'basketball', type: 'tv', name: 'Basketball', extra: [{ name: "search", isRequired: false }] },
@@ -23,7 +23,7 @@ const manifest: Manifest = {
     { id: "Combat Sports", name: "Combat sports", type: "tv", extra: [{ name: "search", isRequired: false }] },
     { id: "Wrestling", name: "Wrestling", type: "tv", extra: [{ name: "search", isRequired: false }] },
     { id: "Formula 1", name: "Formula One", type: "tv", extra: [{ name: "search", isRequired: false }] },
-    { id: "Ice Hockey", name: "Ice Hockey", type: "tv", extra: [{ name: "search", isRequired: false }] },    
+    { id: "Ice Hockey", name: "Ice Hockey", type: "tv", extra: [{ name: "search", isRequired: false }] },
     {
       id: 'Darts',
       name: 'Darts',
@@ -31,6 +31,7 @@ const manifest: Manifest = {
       extra: [{ name: "search", isRequired: false }]
     },
   ],
+  contactEmail: "cyrilleotieno7@gmail.com",  
   resources: [
     { name: 'stream', types: ['tv'] },
     { name: 'meta', types: ['tv'] },
@@ -127,6 +128,7 @@ builder.defineCatalogHandler(async ({ id, extra }) => {
     )
   return {
     metas: results,
+    cacheMaxAge: 0
   }
 })
 builder.defineMetaHandler(async ({ id }) => {
@@ -143,8 +145,10 @@ builder.defineMetaHandler(async ({ id }) => {
   const meta = await getMovieMetaDetals(id)
   return {
     meta,
+    cacheMaxAge: 0
   }
-})
+},)
+
 builder.defineStreamHandler(async ({ id }) => {
   const regEx = RegExp(/^\d+$/gm)
   if (!regEx.test(id)) {
@@ -155,8 +159,9 @@ builder.defineStreamHandler(async ({ id }) => {
   const streams = await getMovieStreams(id)
   return {
     streams,
+    cacheMaxAge: 0
   }
-})
+},)
 
 
 export default builder.getInterface()

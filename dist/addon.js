@@ -37,7 +37,7 @@ const stremio_addon_sdk_1 = require("stremio-addon-sdk");
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest = {
     id: 'community.ppvstreams',
-    version: '0.0.6',
+    version: '0.0.7',
     logo: "https://res.cloudinary.com/dftgy3yfd/image/upload/v1732693733/ppv-streams_wolcio.webp",
     catalogs: [
         { id: 'basketball', type: 'tv', name: 'Basketball', extra: [{ name: "search", isRequired: false }] },
@@ -56,6 +56,7 @@ const manifest = {
             extra: [{ name: "search", isRequired: false }]
         },
     ],
+    contactEmail: "cyrilleotieno7@gmail.com",
     resources: [
         { name: 'stream', types: ['tv'] },
         { name: 'meta', types: ['tv'] },
@@ -162,6 +163,7 @@ builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* (
         }));
     return {
         metas: results,
+        cacheMaxAge: 0
     };
 }));
 builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
@@ -178,6 +180,7 @@ builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ i
     const meta = yield getMovieMetaDetals(id);
     return {
         meta,
+        cacheMaxAge: 0
     };
 }));
 builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
@@ -190,6 +193,7 @@ builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({
     const streams = yield getMovieStreams(id);
     return {
         streams,
+        cacheMaxAge: 0
     };
 }));
 exports.default = builder.getInterface();
