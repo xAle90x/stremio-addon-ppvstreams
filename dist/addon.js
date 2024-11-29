@@ -163,7 +163,9 @@ builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* (
         }));
     return {
         metas: results,
-        cacheMaxAge: 0
+        cacheMaxAge: 0,
+        staleRevalidate: 60,
+        staleError: 24 * 60 * 60
     };
 }));
 builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
@@ -180,7 +182,9 @@ builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ i
     const meta = yield getMovieMetaDetals(id);
     return {
         meta,
-        cacheMaxAge: 0
+        cacheMaxAge: 60,
+        staleError: 24 * 60 * 60,
+        staleRevalidate: 60
     };
 }));
 builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
@@ -193,7 +197,9 @@ builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({
     const streams = yield getMovieStreams(id);
     return {
         streams,
-        cacheMaxAge: 0
+        cacheMaxAge: 0,
+        staleRevalidate: 60,
+        staleError: 24 * 60 * 60
     };
 }));
 exports.default = builder.getInterface();

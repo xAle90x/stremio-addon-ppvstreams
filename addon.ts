@@ -31,7 +31,7 @@ const manifest: Manifest = {
       extra: [{ name: "search", isRequired: false }]
     },
   ],
-  contactEmail: "cyrilleotieno7@gmail.com",  
+  contactEmail: "cyrilleotieno7@gmail.com",
   resources: [
     { name: 'stream', types: ['tv'] },
     { name: 'meta', types: ['tv'] },
@@ -128,7 +128,9 @@ builder.defineCatalogHandler(async ({ id, extra }) => {
     )
   return {
     metas: results,
-    cacheMaxAge: 0
+    cacheMaxAge: 0,
+    staleRevalidate: 60,
+    staleError: 24 * 60 * 60
   }
 })
 builder.defineMetaHandler(async ({ id }) => {
@@ -145,7 +147,9 @@ builder.defineMetaHandler(async ({ id }) => {
   const meta = await getMovieMetaDetals(id)
   return {
     meta,
-    cacheMaxAge: 0
+    cacheMaxAge: 60,
+    staleError: 24 * 60 * 60,
+    staleRevalidate: 60
   }
 },)
 
@@ -159,7 +163,10 @@ builder.defineStreamHandler(async ({ id }) => {
   const streams = await getMovieStreams(id)
   return {
     streams,
-    cacheMaxAge: 0
+    cacheMaxAge: 0,
+    staleRevalidate: 60,
+    staleError: 24 * 60 * 60
+
   }
 },)
 
