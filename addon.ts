@@ -128,7 +128,7 @@ builder.defineCatalogHandler(async ({ id, extra }) => {
     )
   return {
     metas: results,
-    cacheMaxAge: 0,
+    cacheMaxAge: 60,
     staleRevalidate: 60,
     staleError: 24 * 60 * 60
   }
@@ -163,7 +163,7 @@ builder.defineStreamHandler(async ({ id }) => {
   const streams = await getMovieStreams(id)
   return {
     streams,
-    cacheMaxAge: 0,
+    cacheMaxAge: 60,
     staleRevalidate: 60,
     staleError: 24 * 60 * 60
 

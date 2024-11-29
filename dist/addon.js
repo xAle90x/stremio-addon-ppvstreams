@@ -163,7 +163,7 @@ builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* (
         }));
     return {
         metas: results,
-        cacheMaxAge: 0,
+        cacheMaxAge: 60,
         staleRevalidate: 60,
         staleError: 24 * 60 * 60
     };
@@ -197,7 +197,7 @@ builder.defineStreamHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({
     const streams = yield getMovieStreams(id);
     return {
         streams,
-        cacheMaxAge: 0,
+        cacheMaxAge: 60,
         staleRevalidate: 60,
         staleError: 24 * 60 * 60
     };
