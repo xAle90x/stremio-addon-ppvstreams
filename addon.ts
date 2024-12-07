@@ -19,6 +19,7 @@ const manifest: Manifest = {
     { id: 'football', name: 'Football', type: 'tv', extra: [{ name: "search", isRequired: false }] },
     { id: 'Arm Wrestling', name: 'Arm Wrestling', type: 'tv', extra: [{ name: "search", isRequired: false }] },
     { id: 'Rugby', name: 'Rugby', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: 'College Football', name: 'College Football',type:'tv',extra: [{name:'search',isRequired: false}]},
     { id: 'NFL', name: 'NFL', type: 'tv', extra: [{ name: "search", isRequired: false }] },
     { id: "Combat Sports", name: "Combat sports", type: "tv", extra: [{ name: "search", isRequired: false }] },
     { id: "Wrestling", name: "Wrestling", type: "tv", extra: [{ name: "search", isRequired: false }] },
