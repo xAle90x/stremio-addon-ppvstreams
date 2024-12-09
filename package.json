@@ -12,11 +12,7 @@
 		"catalogs": "dist/catalogs",
 		"utils": "dist/utils",
 		"cronjobs": "dist/cronjobs"
-	},
-	"pre-commit": [
-		"build",
-		"add-build"
-	],
+	},	
 	"dependencies": {
 		"@sentry/node": "^8.37.1",
 		"@sentry/profiling-node": "^8.37.1",
