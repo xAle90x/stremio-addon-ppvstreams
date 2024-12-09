@@ -8,6 +8,7 @@ import {
 } from 'stremio-addon-sdk'
 
 import { IPPLandStreamDetails, IPPVLandStream } from '.'
+import { cricketMetaBuilder, cricketStreamsBuilder } from './catalogs/cricket'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 
 const manifest: Manifest = {
@@ -17,20 +18,17 @@ const manifest: Manifest = {
   catalogs: [
     { id: 'basketball', type: 'tv', name: 'Basketball', extra: [{ name: "search", isRequired: false }] },
     { id: 'football', name: 'Football', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-    { id: 'Arm Wrestling', name: 'Arm Wrestling', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-    { id: 'Rugby', name: 'Rugby', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-    { id: 'College Football', name: 'College Football',type:'tv',extra: [{name:'search',isRequired: false}]},
-    { id: 'NFL', name: 'NFL', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-    { id: "Combat Sports", name: "Combat sports", type: "tv", extra: [{ name: "search", isRequired: false }] },
-    { id: "Wrestling", name: "Wrestling", type: "tv", extra: [{ name: "search", isRequired: false }] },
-    { id: "Formula 1", name: "Formula One", type: "tv", extra: [{ name: "search", isRequired: false }] },
-    { id: "Ice Hockey", name: "Ice Hockey", type: "tv", extra: [{ name: "search", isRequired: false }] },
-    {
-      id: 'Darts',
-      name: 'Darts',
-      type: 'tv',
-      extra: [{ name: "search", isRequired: false }]
-    },
+    { id: 'arm-wrestling', name: 'Arm Wrestling', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: 'rugby', name: 'Rugby', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: 'college-football', name: 'College Football', type: 'tv', extra: [{ name: 'search', isRequired: false }] },
+    { id: 'motorsports', name: 'Motorsports', type: 'tv', extra: [{ name: 'search', isRequired: false }] },
+    { id: 'nfl', name: 'NFL', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+    { id: "combat-sports", name: "Combat sports", type: "tv", extra: [{ name: "search", isRequired: false }] },
+    { id: "wrestling", name: "Wrestling", type: "tv", extra: [{ name: "search", isRequired: false }] },
+    { id: "formula-1", name: "Formula One", type: "tv", extra: [{ name: "search", isRequired: false }] },
+    { id: "ice-hockey", name: "Ice Hockey", type: "tv", extra: [{ name: "search", isRequired: false }] },
+    { id: 'cricket', name: "Cricket", type: "tv", extra: [{ name: "search", isRequired: false }] },
+    { id: 'darts', name: 'darts', type: 'tv', extra: [{ name: "search", isRequired: false }] },
   ],
   contactEmail: "cyrilleotieno7@gmail.com",
   resources: [
@@ -51,7 +49,7 @@ async function getLiveFootballCatalog(id: string, search?: string): Promise<IPPV
     const response = await matches.json()
     const results: IPPVLandStream[] = response.streams ?? []
     const live = results
-      .filter(a => a.category.toLowerCase() == id.toLowerCase())
+      .filter(a => a.category.toLowerCase().replace(/ /gi, "-") == id.toLowerCase())
       .map(a => a.streams)
       .flat(2).filter(stream => {
         const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
@@ -103,7 +101,7 @@ async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
       posterShape: 'landscape',
       background: response?.data?.poster ?? "https://placehold.co/600x400",
       language: 'english',
-      website: response.data.source,
+      website: response.data.source,      
     }
   } catch (error) {
     Sentry.captureException(error)
@@ -111,22 +109,29 @@ async function getMovieMetaDetals(id: string): Promise<MetaDetail> {
   }
 }
 const builder = new addonBuilder(manifest)
-builder.defineCatalogHandler(async ({ id, extra }) => {
+builder.defineCatalogHandler(async ({ id, extra }) => {  
   let results: MetaPreview[] = []
   // PREVENT QUERYING FOR NON PPV EVENTS
   if (supported_id.includes(id))
-    results = (await getLiveFootballCatalog(id, extra.search)).map(
-      resp => ({
-        id: resp.id.toString(),
-        name: resp.name,
-        type: 'tv',
-        background: resp.poster,
-        description: resp.name,
-        poster: resp.poster,
-        posterShape: 'landscape',
-        logo: resp.poster,
-      }),
-    )
+    switch (id) {
+      case 'cricket':
+        results = await cricketStreamsBuilder()
+        break
+      default:
+        results = (await getLiveFootballCatalog(id, extra.search)).map(
+          resp => ({
+            id: resp.id.toString(),
+            name: resp.name,
+            type: 'tv',
+            background: resp.poster,
+            description: resp.name,
+            poster: resp.poster,
+            posterShape: 'landscape',
+            logo: resp.poster,
+          }),
+        )
+        break;
+    }
   return {
     metas: results,
     cacheMaxAge: 60,
@@ -137,6 +142,12 @@ builder.defineCatalogHandler(async ({ id, extra }) => {
 builder.defineMetaHandler(async ({ id }) => {
   const regEx = RegExp(/^\d+$/gm)
   if (!regEx.test(id)) {
+    if (id.includes('wwtv')) {
+      const meta = await cricketMetaBuilder(id)
+      return {
+        meta
+      }
+    }
     return {
       meta: {
         id: id,
@@ -154,7 +165,7 @@ builder.defineMetaHandler(async ({ id }) => {
   }
 },)
 
-builder.defineStreamHandler(async ({ id }) => {
+builder.defineStreamHandler(async ({ id}) => {  
   const regEx = RegExp(/^\d+$/gm)
   if (!regEx.test(id)) {
     return {

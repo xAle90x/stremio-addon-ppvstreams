@@ -34,6 +34,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const Sentry = __importStar(require("@sentry/node"));
 const stremio_addon_sdk_1 = require("stremio-addon-sdk");
+const cricket_1 = require("./catalogs/cricket");
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 const manifest = {
     id: 'community.ppvstreams',
@@ -42,19 +43,17 @@ const manifest = {
     catalogs: [
         { id: 'basketball', type: 'tv', name: 'Basketball', extra: [{ name: "search", isRequired: false }] },
         { id: 'football', name: 'Football', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-        { id: 'Arm Wrestling', name: 'Arm Wrestling', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-        { id: 'Rugby', name: 'Rugby', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-        { id: 'NFL', name: 'NFL', type: 'tv', extra: [{ name: "search", isRequired: false }] },
-        { id: "Combat Sports", name: "Combat sports", type: "tv", extra: [{ name: "search", isRequired: false }] },
-        { id: "Wrestling", name: "Wrestling", type: "tv", extra: [{ name: "search", isRequired: false }] },
-        { id: "Formula 1", name: "Formula One", type: "tv", extra: [{ name: "search", isRequired: false }] },
-        { id: "Ice Hockey", name: "Ice Hockey", type: "tv", extra: [{ name: "search", isRequired: false }] },
-        {
-            id: 'Darts',
-            name: 'Darts',
-            type: 'tv',
-            extra: [{ name: "search", isRequired: false }]
-        },
+        { id: 'arm-wrestling', name: 'Arm Wrestling', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+        { id: 'rugby', name: 'Rugby', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+        { id: 'college-football', name: 'College Football', type: 'tv', extra: [{ name: 'search', isRequired: false }] },
+        { id: 'motorsports', name: 'Motorsports', type: 'tv', extra: [{ name: 'search', isRequired: false }] },
+        { id: 'nfl', name: 'NFL', type: 'tv', extra: [{ name: "search", isRequired: false }] },
+        { id: "combat-sports", name: "Combat sports", type: "tv", extra: [{ name: "search", isRequired: false }] },
+        { id: "wrestling", name: "Wrestling", type: "tv", extra: [{ name: "search", isRequired: false }] },
+        { id: "formula-1", name: "Formula One", type: "tv", extra: [{ name: "search", isRequired: false }] },
+        { id: "ice-hockey", name: "Ice Hockey", type: "tv", extra: [{ name: "search", isRequired: false }] },
+        { id: 'cricket', name: "Cricket", type: "tv", extra: [{ name: "search", isRequired: false }] },
+        { id: 'darts', name: 'darts', type: 'tv', extra: [{ name: "search", isRequired: false }] },
     ],
     contactEmail: "cyrilleotieno7@gmail.com",
     resources: [
@@ -77,7 +76,7 @@ function getLiveFootballCatalog(id, search) {
             const response = yield matches.json();
             const results = (_a = response.streams) !== null && _a !== void 0 ? _a : [];
             const live = results
-                .filter(a => a.category.toLowerCase() == id.toLowerCase())
+                .filter(a => a.category.toLowerCase().replace(/ /gi, "-") == id.toLowerCase())
                 .map(a => a.streams)
                 .flat(2).filter(stream => {
                 const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
@@ -151,16 +150,23 @@ builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* (
     let results = [];
     // PREVENT QUERYING FOR NON PPV EVENTS
     if (supported_id.includes(id))
-        results = (yield getLiveFootballCatalog(id, extra.search)).map(resp => ({
-            id: resp.id.toString(),
-            name: resp.name,
-            type: 'tv',
-            background: resp.poster,
-            description: resp.name,
-            poster: resp.poster,
-            posterShape: 'landscape',
-            logo: resp.poster,
-        }));
+        switch (id) {
+            case 'cricket':
+                results = yield (0, cricket_1.cricketStreamsBuilder)();
+                break;
+            default:
+                results = (yield getLiveFootballCatalog(id, extra.search)).map(resp => ({
+                    id: resp.id.toString(),
+                    name: resp.name,
+                    type: 'tv',
+                    background: resp.poster,
+                    description: resp.name,
+                    poster: resp.poster,
+                    posterShape: 'landscape',
+                    logo: resp.poster,
+                }));
+                break;
+        }
     return {
         metas: results,
         cacheMaxAge: 60,
@@ -171,6 +177,12 @@ builder.defineCatalogHandler((_a) => __awaiter(void 0, [_a], void 0, function* (
 builder.defineMetaHandler((_a) => __awaiter(void 0, [_a], void 0, function* ({ id }) {
     const regEx = RegExp(/^\d+$/gm);
     if (!regEx.test(id)) {
+        if (id.includes('wwtv')) {
+            const meta = yield (0, cricket_1.cricketMetaBuilder)(id);
+            return {
+                meta
+            };
+        }
         return {
             meta: {
                 id: id,

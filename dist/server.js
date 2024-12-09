@@ -32,12 +32,14 @@ const stremio_addon_sdk_1 = require("stremio-addon-sdk");
 const addon_1 = __importDefault(require("./addon"));
 const Sentry = __importStar(require("@sentry/node"));
 const profiling_node_1 = require("@sentry/profiling-node");
+const cronjobs_1 = require("cronjobs");
 Sentry.init({
     dsn: "https://2faaad8d19ae0928c559d1ff0e81f093@o4504167984136192.ingest.us.sentry.io/4508274805374976",
     integrations: [(0, profiling_node_1.nodeProfilingIntegration)()],
     // Tracing
     tracesSampleRate: 1.0, //  Capture 100% of the transactions
 });
+cronjobs_1.buildCatalogCron.start();
 (0, stremio_addon_sdk_1.serveHTTP)(addon_1.default, { port: Number((_a = process.env.PORT) !== null && _a !== void 0 ? _a : 56397) });
 // when you've deployed your addon, un-comment this line
 // publishToCentral("https://my-addon.awesome/manifest.json")
