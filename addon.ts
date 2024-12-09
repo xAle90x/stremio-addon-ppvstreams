@@ -14,7 +14,7 @@ import { IPPLandStreamDetails, IPPVLandStream } from 'types'
 
 const manifest: Manifest = {
   id: 'community.ppvstreams',
-  version: '0.0.7',
+  version: '0.0.8',
   logo: "https://res.cloudinary.com/dftgy3yfd/image/upload/v1732693733/ppv-streams_wolcio.webp",
   catalogs: [
     { id: 'basketball', type: 'tv', name: 'Basketball', extra: [{ name: "search", isRequired: false }] },
