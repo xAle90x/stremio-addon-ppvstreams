@@ -7,8 +7,9 @@ import {
   Stream,
 } from 'stremio-addon-sdk'
 
-import { IPPLandStreamDetails, IPPVLandStream } from '.'
+
 import { cricketMetaBuilder, cricketStreamsBuilder } from './catalogs/cricket'
+import { IPPLandStreamDetails, IPPVLandStream } from 'types'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 
 const manifest: Manifest = {
