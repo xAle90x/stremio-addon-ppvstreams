@@ -1,6 +1,6 @@
 import Redis from "ioredis";
 
-const redis = new Redis({ host: "redis-12396.c245.us-east-1-3.ec2.redns.redis-cloud.com", port: 12396, password: "6zBhg6grpa4lVG00KZX0YK1wfMlIUhzn", name: "db-LYKF5ZB0", username: "default" })
+const redis = new Redis({ host: process.env.REDIS_HOST, port: Number(process.env.REDIS_PORT?.toString()), password: process.env.REDIS_PASSWORD, name: process.env.REDIS_DB, username: "default" })
 
 
 export const saveToCache = async (id: string, data: string,expiry:number) => {

@@ -8,6 +8,11 @@
 		"add-build": "git add dist",
 		"dev": "ts-node server.ts --launch"
 	},
+	"_moduleAliases": {
+		"catalogs": "dist/catalogs",
+		"utils": "dist/utils",
+		"cronjobs": "dist/cronjobs"
+	},
 	"pre-commit": [
 		"build",
 		"add-build"
@@ -18,11 +23,15 @@
 		"@types/stremio-addon-sdk": "^1.6.11",
 		"cron": "^3.2.1",
 		"dayjs": "^1.11.13",
+		"dotenv": "^16.4.7",
 		"ioredis": "^5.4.1",
-		"stremio-addon-sdk": "1.1.x"
+		"module-alias": "^2.2.3",
+		"stremio-addon-sdk": "1.1.x",
+		"tsconfig-paths": "^4.2.0"
 	},
 	"devDependencies": {
 		"@eslint/js": "^9.14.0",
+		"@types/module-alias": "^2.0.4",
 		"@types/node": "^22.9.0",
 		"@typescript-eslint/eslint-plugin": "^8.13.0",
 		"@typescript-eslint/parser": "^8.13.0",
@@ -31,6 +40,7 @@
 		"pre-commit": "^1.2.2",
 		"prettier": "^3.3.3",
 		"rimraf": "^6.0.1",
+		"tsc-alias": "^1.8.10",
 		"typescript": "^5.6.3",
 		"typescript-eslint": "^8.13.0"
 	}

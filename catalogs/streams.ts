@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Sentry from "@sentry/node"
 import dayjs from "dayjs";
-import { getFromCache, saveToCache } from "../redis";
+import { getFromCache, saveToCache } from "utils/redis";
 interface DaddyliveStream {
     id: string;
     type: string;
@@ -41,7 +41,7 @@ export const fetchWorldWideSportStreams = async (): Promise<DaddyliveStream[]> =
             const request = await fetch('https://848b3516657c-worldwide-sports-tv.baby-beamup.club/catalog/tv/tv.json');
             const response = await request.json()
             saveToCache('worldwide-events', JSON.stringify(response['metas']),24 * 60 * 60)
-            return response['metas'] ?? []
+            return (response['metas'] ?? [])?.filter((a:any)=>a.genres.includes('UK') || a.genres.includes('USA'))
         }
     } catch (error) {
         Sentry.captureException(error)

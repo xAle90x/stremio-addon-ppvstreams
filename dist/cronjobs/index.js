@@ -12,15 +12,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.buildCatalogCron = void 0;
 const streams_1 = require("catalogs/streams");
 const cron_1 = require("cron");
-const redis_1 = require("redis");
+const redis_1 = require("utils/redis");
 const index_1 = require("utils/index");
-exports.buildCatalogCron = new cron_1.CronJob("0 0,4,8,12 * * *", () => __awaiter(void 0, void 0, void 0, function* () {
+exports.buildCatalogCron = new cron_1.CronJob("0 1,8,16 * * *", () => __awaiter(void 0, void 0, void 0, function* () {
     const channels = yield (0, streams_1.fetchWorldWideSportStreams)();
     const events = (yield (0, streams_1.fetchDaddyliveSchedule)());
     const filtered = events.reduce((total, current) => {
         const exists = channels.filter((a) => (0, index_1.compareDaddyliveStreams)(a.name, current.channels));
-        if (exists) {
-            total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams).flat() });
+        if ((exists === null || exists === void 0 ? void 0 : exists.length) > 0) {
+            total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams).flat(), time: current.date });
         }
         return total;
     }, []);

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-
+import 'module-alias/register'
+import 'dotenv/config'
 import { serveHTTP } from "stremio-addon-sdk"
 import addonInterface from "./addon"
 import * as Sentry from "@sentry/node"
