@@ -2,7 +2,7 @@ import * as Sentry from "@sentry/node"
 import { IDaddyliveEvent } from "cronjobs/index"
 import { MetaDetail, MetaPreview, Stream } from "stremio-addon-sdk"
 import { getFromCache } from "utils/redis"
-export const cricketStreamsBuilder = async (): Promise<MetaPreview[]> => {
+export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
     try {
         const now = Date.now()
         const thirtyMinutes = 30 * 60 * 1000;
@@ -41,7 +41,7 @@ export const cricketStreamsBuilder = async (): Promise<MetaPreview[]> => {
 
 export const cricketMetaBuilder = async (id: string): Promise<MetaDetail> => {
     try {
-        const stream = (await cricketStreamsBuilder()).find((a) => a.id == id)
+        const stream = (await cricketCatalogBuilder()).find((a) => a.id == id)
         if (stream) {
             return {
                 id,
@@ -71,7 +71,7 @@ export const cricketMetaBuilder = async (id: string): Promise<MetaDetail> => {
     }
 }
 
-export const cricketStreamBuilder = async (id: string): Promise<Stream[]> => {
+export const cricketStreamsBuilder = async (id: string): Promise<Stream[]> => {
     try {
         const cacheExist = await getFromCache('catalog')
         if (!cacheExist) {

@@ -19,7 +19,7 @@ export const buildCatalogCron = new CronJob("0 1,8,16 * * *", async () => {
     const filtered = events.reduce((total: IDaddyliveEvent[], current) => {
         const exists = channels.filter((a) => compareDaddyliveStreams(a.name, current.channels))
         if (exists?.length > 0) {
-            total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams).flat(), time: current.date })
+            total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
         }
         return total
     }, [])
