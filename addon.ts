@@ -8,7 +8,7 @@ import {
 } from 'stremio-addon-sdk'
 
 
-import { cricketMetaBuilder, cricketStreamsBuilder } from 'catalogs/cricket'
+import { cricketCatalogBuilder, cricketMetaBuilder, cricketStreamsBuilder } from 'catalogs/cricket'
 import { IPPLandStreamDetails, IPPVLandStream } from 'types'
 // Docs: https://github.com/Stremio/stremio-addon-sdk/blob/master/docs/api/responses/manifest.md
 
@@ -116,7 +116,7 @@ builder.defineCatalogHandler(async ({ id, extra }) => {
   if (supported_id.includes(id))
     switch (id) {
       case 'cricket':
-        results = await cricketStreamsBuilder()
+        results = await cricketCatalogBuilder()
         break
       default:
         results = (await getLiveFootballCatalog(id, extra.search)).map(
@@ -169,6 +169,12 @@ builder.defineMetaHandler(async ({ id }) => {
 builder.defineStreamHandler(async ({ id}) => {  
   const regEx = RegExp(/^\d+$/gm)
   if (!regEx.test(id)) {
+    if (id.includes('wwtv')) {
+      const streams = await cricketStreamsBuilder(id)
+      return {
+        streams
+      }
+    }
     return {
       streams: []
     }
