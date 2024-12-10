@@ -1,26 +1,33 @@
 {
 	"name": "stremio-addon-ppvstreams",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"description": "Watch live sports events and ppv streams from ppv land",
 	"scripts": {
 		"start": "node dist/server.js",
 		"build": "rimraf dist && tsc",
-		"add-build": "git add dist"
+		"add-build": "git add dist",
+		"dev": "ts-node server.ts --launch"
 	},
-	"pre-commit": [
-		"build",
-		"add-build"
-	],
+	"_moduleAliases": {
+		"catalogs": "dist/catalogs",
+		"utils": "dist/utils",
+		"cronjobs": "dist/cronjobs"
+	},	
 	"dependencies": {
 		"@sentry/node": "^8.37.1",
 		"@sentry/profiling-node": "^8.37.1",
 		"@types/stremio-addon-sdk": "^1.6.11",
+		"cron": "^3.2.1",
+		"dayjs": "^1.11.13",
+		"dotenv": "^16.4.7",
 		"ioredis": "^5.4.1",
-		"stremio-addon-sdk": "1.1.x"
+		"module-alias": "^2.2.3",
+		"stremio-addon-sdk": "1.1.x",
+		"tsconfig-paths": "^4.2.0"
 	},
-	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e",
 	"devDependencies": {
 		"@eslint/js": "^9.14.0",
+		"@types/module-alias": "^2.0.4",
 		"@types/node": "^22.9.0",
 		"@typescript-eslint/eslint-plugin": "^8.13.0",
 		"@typescript-eslint/parser": "^8.13.0",
@@ -29,6 +36,7 @@
 		"pre-commit": "^1.2.2",
 		"prettier": "^3.3.3",
 		"rimraf": "^6.0.1",
+		"tsc-alias": "^1.8.10",
 		"typescript": "^5.6.3",
 		"typescript-eslint": "^8.13.0"
 	}

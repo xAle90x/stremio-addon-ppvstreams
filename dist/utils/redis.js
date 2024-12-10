@@ -11,16 +11,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
+var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getFromCache = exports.saveToCache = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
-const redis = new ioredis_1.default({ host: "redis-12396.c245.us-east-1-3.ec2.redns.redis-cloud.com", port: 12396, password: "6zBhg6grpa4lVG00KZX0YK1wfMlIUhzn", name: "db-LYKF5ZB0", username: "default" });
-const saveToCache = (id, data) => __awaiter(void 0, void 0, void 0, function* () {
-    yield redis.set(id.toString(), JSON.stringify(data));
+const redis = new ioredis_1.default({ host: process.env.REDIS_HOST, port: Number((_a = process.env.REDIS_PORT) === null || _a === void 0 ? void 0 : _a.toString()), password: process.env.REDIS_PASSWORD, name: process.env.REDIS_DB, username: "default" });
+const saveToCache = (id, data, expiry) => __awaiter(void 0, void 0, void 0, function* () {
+    yield redis.set(id, data, 'EX', expiry);
 });
 exports.saveToCache = saveToCache;
 const getFromCache = (id) => __awaiter(void 0, void 0, void 0, function* () {
-    const record = yield redis.get(id.toString());
+    const record = yield redis.get(id);
     if (!record) {
         return null;
     }

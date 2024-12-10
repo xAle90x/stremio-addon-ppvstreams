@@ -16,28 +16,42 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 var _a;
 Object.defineProperty(exports, "__esModule", { value: true });
+require("module-alias/register");
+require("dotenv/config");
 const stremio_addon_sdk_1 = require("stremio-addon-sdk");
 const addon_1 = __importDefault(require("./addon"));
 const Sentry = __importStar(require("@sentry/node"));
 const profiling_node_1 = require("@sentry/profiling-node");
+const cronjobs_1 = require("cronjobs");
 Sentry.init({
     dsn: "https://2faaad8d19ae0928c559d1ff0e81f093@o4504167984136192.ingest.us.sentry.io/4508274805374976",
     integrations: [(0, profiling_node_1.nodeProfilingIntegration)()],
     // Tracing
     tracesSampleRate: 1.0, //  Capture 100% of the transactions
 });
+cronjobs_1.buildCatalogCron.start();
 (0, stremio_addon_sdk_1.serveHTTP)(addon_1.default, { port: Number((_a = process.env.PORT) !== null && _a !== void 0 ? _a : 56397) });
 // when you've deployed your addon, un-comment this line
 // publishToCentral("https://my-addon.awesome/manifest.json")
