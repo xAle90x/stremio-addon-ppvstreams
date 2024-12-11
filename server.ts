@@ -7,17 +7,20 @@ import timezone from 'dayjs/plugin/timezone'
 import { serveHTTP } from "stremio-addon-sdk"
 import addonInterface from "./addon"
 import * as Sentry from "@sentry/node"
-import  { nodeProfilingIntegration } from "@sentry/profiling-node"
+import { nodeProfilingIntegration } from "@sentry/profiling-node"
 import { buildCatalogCron } from "cronjobs"
 import dayjs from 'dayjs'
+import { v2 as cloudinary } from "cloudinary"
+
 
 dayjs.extend(utc)
 dayjs.extend(timezone)
+cloudinary.config({ api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET, cloud_name: process.env.CLOUDINARY_CLOUD_NAME })
 
 Sentry.init({
     dsn: "https://2faaad8d19ae0928c559d1ff0e81f093@o4504167984136192.ingest.us.sentry.io/4508274805374976",
-    integrations: [ nodeProfilingIntegration()],
-    
+    integrations: [nodeProfilingIntegration()],
+
     // Tracing
     tracesSampleRate: 1.0, //  Capture 100% of the transactions
 })

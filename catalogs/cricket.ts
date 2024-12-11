@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/node"
+import axios from "axios"
 import { IDaddyliveEvent } from "cronjobs/index"
 import { MetaDetail, MetaPreview, Stream } from "stremio-addon-sdk"
-import { getFromCache } from "utils/redis"
+import { IRapidCricketEvent } from "types"
+import { getFromCache, saveToCache } from "utils/redis"
 export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
     try {
         const now = Date.now()
@@ -25,9 +27,9 @@ export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
                     name: a.name,
                     type: "tv",
                     description: a.name,
-                    logo: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%3Fid%3DOIP.AuYX7CjYL6ge20L2Zd7nQAHaHa%26pid%3DApi&f=1&ipt=41d97734a05f562df01a485180fa285fb0cc26191aa8fa1cda8041e8591e1aae&ipo=images",
+                    logo:  a.poster ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%3Fid%3DOIP.AuYX7CjYL6ge20L2Zd7nQAHaHa%26pid%3DApi&f=1&ipt=41d97734a05f562df01a485180fa285fb0cc26191aa8fa1cda8041e8591e1aae&ipo=images",
                     id: a.id,
-                    poster: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fthumbs.dreamstime.com%2Fb%2Flive-cricket-tournament-poster-banner-design-game-equipments-glossy-blue-background-live-cricket-tournament-poster-135206032.jpg&f=1&nofb=1&ipt=8d940ce9afaad7d99d2cecf5c7cb85a6f02bcd8cccd67cb5678d3008a4f43fa8&ipo=images",
+                    poster: a?.poster ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fthumbs.dreamstime.com%2Fb%2Flive-cricket-tournament-poster-banner-design-game-equipments-glossy-blue-background-live-cricket-tournament-poster-135206032.jpg&f=1&nofb=1&ipt=8d940ce9afaad7d99d2cecf5c7cb85a6f02bcd8cccd67cb5678d3008a4f43fa8&ipo=images",
                     posterShape: "landscape",
                 }))
             return filtered
@@ -83,6 +85,32 @@ export const cricketStreamsBuilder = async (id: string): Promise<Stream[]> => {
                 return filtered.streams!
             }
             return []
+        }
+    } catch (error) {
+        Sentry.captureException(error)
+        return []
+    }
+}
+
+export const cricketRapidApiSchedule = async (): Promise<IRapidCricketEvent[]> => {
+    try {
+        // check if exist in cache
+        const exists = await getFromCache('rapid-cricket')
+        if (exists) {
+            return exists
+        } else {
+            const options = {
+                method: 'GET',
+                url: 'https://cricket-live-line1.p.rapidapi.com/upcomingMatches',
+                headers: {
+                    'x-rapidapi-key': process.env.RAPID_CRICKET_API_KEY,
+                    'x-rapidapi-host': 'cricket-live-line1.p.rapidapi.com'
+                }
+            };
+            const response = await axios.request(options);
+            const events = (response.data?.data);
+            saveToCache('rapid-cricket', JSON.stringify(events), 60 * 60 * 18)
+            return events
         }
     } catch (error) {
         Sentry.captureException(error)
