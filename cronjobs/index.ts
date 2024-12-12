@@ -26,10 +26,10 @@ export const buildCatalogCron = new CronJob("0 1,8,16 * * *", async () => {
 
         if (exists?.length > 0) {
             if (current.type == "cricket") {
-                const awayTeam = (current.name.split("vs")?.at(-1)?.trim())
+                const awayTeam = (current.name.split("vs")?.at(-1)?.trim())                
                 if (awayTeam) {
                     const regEx = RegExp(awayTeam, 'gi')
-                    const fixture = cricket.find((a) => a.team_a.match(regEx) || a.team_b.match)
+                    const fixture = cricket.find((a) => a.team_a.match(regEx) || a.team_b.match(regEx))                    
                     if (fixture) {
                         const poster = await createEventPoster(fixture.team_a_img, fixture.team_b_img)
                         total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date, poster })
