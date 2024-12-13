@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as Sentry from "@sentry/node"
+import axios from "axios";
 import dayjs from "dayjs";
+import { FootballHighlightEvent } from "types";
 import { getFromCache, saveToCache } from "utils/redis";
 interface DaddyliveStream {
     id: string;
@@ -65,7 +67,7 @@ export const fetchDaddyliveSchedule = async (): Promise<DaddyliveSchedule[]> => 
             const ukTimezone = "Europe/London";
             // Convert to Kenya timezone (EAT is UTC+3)
             const kenyaTimezone = "Africa/Nairobi";
-            
+
 
             for (const [showKey, showValue] of Object.entries(value)) {
                 const type = showKey.trim().replace(/ /gi, "-").toLowerCase()
@@ -77,6 +79,50 @@ export const fetchDaddyliveSchedule = async (): Promise<DaddyliveSchedule[]> => 
             }
         }
         return events
+    } catch (error) {
+        Sentry.captureException(error)
+        return []
+    }
+}
+// fetch football higlight events
+
+export const fetchFootballHighlightEvents = async (): Promise<FootballHighlightEvent[]> => {
+    try {
+        const events: FootballHighlightEvent[] = []
+        for (let index = 0; index < 10; index++) {
+            const games = await eventFetcher(index * 100)
+            if (games.length > 0) {
+                events.push(...games)
+                await new Promise((resolve) => setTimeout(resolve, 1000))
+            } else {
+                break
+            }
+        }
+        return events
+    } catch (error) {
+        Sentry.captureException(error)
+        return []
+    }
+
+}
+
+const eventFetcher = async (offset: number): Promise<FootballHighlightEvent[]> => {
+    try {
+        const options = {
+            method: 'GET',
+            url: 'https://football-highlights-api.p.rapidapi.com/matches',
+            params: {
+                date: dayjs().format('YYYY-MM-DD'),
+                timezone: 'Africa/Nairobi',
+                offset
+            },
+            headers: {
+                'x-rapidapi-key': process.env.RAPID_FOOTBALL_HIGHLIGHTS_API,
+                'x-rapidapi-host': 'football-highlights-api.p.rapidapi.com'
+            }
+        };
+        const response = await axios.request(options);
+        return response?.data?.data
     } catch (error) {
         Sentry.captureException(error)
         return []

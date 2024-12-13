@@ -8,7 +8,7 @@ import { serveHTTP } from "stremio-addon-sdk"
 import addonInterface from "./addon"
 import * as Sentry from "@sentry/node"
 import { nodeProfilingIntegration } from "@sentry/profiling-node"
-import { buildCatalogCron } from "cronjobs"
+import { buildCricketCatalogCron, fetchFootballFixturesCron } from "cronjobs"
 import dayjs from 'dayjs'
 import { v2 as cloudinary } from "cloudinary"
 
@@ -24,7 +24,8 @@ Sentry.init({
     // Tracing
     tracesSampleRate: 1.0, //  Capture 100% of the transactions
 })
-buildCatalogCron.start()
+buildCricketCatalogCron.start()
+fetchFootballFixturesCron.start()
 serveHTTP(addonInterface, { port: Number(process.env.PORT ?? 56397) })
 
 // when you've deployed your addon, un-comment this line

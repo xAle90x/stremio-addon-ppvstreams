@@ -116,7 +116,7 @@ builder.defineCatalogHandler(async ({ id, extra }) => {
   if (supported_id.includes(id))
     switch (id) {
       case 'cricket':
-        results = await cricketCatalogBuilder()
+        results = await cricketCatalogBuilder({search: extra.search})
         break
       default:
         results = (await getLiveFootballCatalog(id, extra.search)).map(
