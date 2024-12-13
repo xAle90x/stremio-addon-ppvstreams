@@ -1,13 +1,14 @@
 import * as Sentry from "@sentry/node"
 import axios from "axios"
 import { IDaddyliveEvent } from "cronjobs/index"
+import dayjs from "dayjs"
 import { MetaDetail, MetaPreview, Stream } from "stremio-addon-sdk"
 import { IRapidCricketEvent } from "types"
 import { getFromCache, saveToCache } from "utils/redis"
 export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
     try {
-        const now = Date.now()
-        const thirtyMinutes = 30 * 60 * 1000;
+        const now = dayjs.tz(dayjs(), 'Africa/Nairobi').unix()
+        const thirtyMinutes = dayjs.tz(dayjs(), 'Africa/Nairobi').add(45, 'minutes').unix()
         const cacheExist = await getFromCache('catalog')
         if (!cacheExist) {
             return []
@@ -16,18 +17,18 @@ export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
             const filtered = matches.filter((a) => {
                 if (a.type == "cricket") {
                     const startsAtMs = a.time
-                    if ((startsAtMs <= now) || // Currently in progress
-                        (startsAtMs > now && startsAtMs <= now + thirtyMinutes)) // Starts within 30 minutes 
-                    {
-                        return a
+                    console.log(thirtyMinutes)
+                    if ((startsAtMs <= now) || (startsAtMs > now && startsAtMs <= thirtyMinutes)) {
+                        return true
                     }
+                    return false
                 }
             })
                 .map((a) => (<MetaPreview>{
                     name: a.name,
                     type: "tv",
                     description: a.name,
-                    logo:  a.poster ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%3Fid%3DOIP.AuYX7CjYL6ge20L2Zd7nQAHaHa%26pid%3DApi&f=1&ipt=41d97734a05f562df01a485180fa285fb0cc26191aa8fa1cda8041e8591e1aae&ipo=images",
+                    logo: a.poster ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse1.mm.bing.net%2Fth%3Fid%3DOIP.AuYX7CjYL6ge20L2Zd7nQAHaHa%26pid%3DApi&f=1&ipt=41d97734a05f562df01a485180fa285fb0cc26191aa8fa1cda8041e8591e1aae&ipo=images",
                     id: a.id,
                     poster: a?.poster ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fthumbs.dreamstime.com%2Fb%2Flive-cricket-tournament-poster-banner-design-game-equipments-glossy-blue-background-live-cricket-tournament-poster-135206032.jpg&f=1&nofb=1&ipt=8d940ce9afaad7d99d2cecf5c7cb85a6f02bcd8cccd67cb5678d3008a4f43fa8&ipo=images",
                     posterShape: "landscape",
@@ -36,6 +37,7 @@ export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
         }
 
     } catch (error) {
+        console.log(error)
         Sentry.captureException(error)
         return []
     }
