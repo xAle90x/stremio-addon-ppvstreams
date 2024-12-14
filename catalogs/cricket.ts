@@ -39,8 +39,7 @@ export const cricketCatalogBuilder = async ({ search }: { search?: string }): Pr
             return filtered
         }
 
-    } catch (error) {
-        console.log(error)
+    } catch (error) {        
         Sentry.captureException(error)
         return []
     }

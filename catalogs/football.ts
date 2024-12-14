@@ -46,13 +46,10 @@ export const getFootballCatalog = async ({ search }: { search?: string }): Promi
         const thirtyMinutes = dayjs().add(30, 'minutes').unix()
         const footBallCatalog: IFootballEventCatalog[] = await getFromCache('football-catalog')
         const catalog = footBallCatalog.filter(stream => {
-            const startsAtMs = dayjs.unix(stream.time).utc().tz('Africa/Nairobi').unix()
-            console.log(startsAtMs)
-            const endTime = dayjs.unix(startsAtMs).utc().add(150, 'minutes').tz('Africa/Nairobi').unix()
-            console.log(endTime)
-            console.log(stream.name)
+            const startsAtMs = dayjs.unix(stream.time).utc().tz('Africa/Nairobi').unix()            
+            const endTime = dayjs.unix(startsAtMs).utc().add(150, 'minutes').tz('Africa/Nairobi').unix()            
             // Convert end time to milliseconds
-            return (startsAtMs <= now ) || // Currently in progress and not ended
+            return (startsAtMs <= now && now < endTime ) || // Currently in progress and not ended
                 (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
         }).map((a) => (<MetaPreview>{ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name }))
         if (search) {

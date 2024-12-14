@@ -61,7 +61,7 @@ export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
     saveToCache('catalog', JSON.stringify(filtered), 12 * 60 * 60)
 })
 
-export const fetchFootballFixturesCron = new CronJob("07 15 * * *", async () => {
+export const fetchFootballFixturesCron = new CronJob("45 02 * * *", async () => {
     const footballEvents = await fetchFootballHighlightEvents()
 
     const events = await footballEvents.reduce(async (all: Promise<IFootballEvent[]>, current) => {
@@ -70,8 +70,8 @@ export const fetchFootballFixturesCron = new CronJob("07 15 * * *", async () => 
             homeTeam: current.homeTeam.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
             awayTeam: current?.awayTeam?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
             league: current?.league?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images"
-        })
-        total.push({ awayTeam: current.awayTeam.name ?? "Away team", homeTeam: current.homeTeam.name ?? "Home team", poster, id: current.id.toString(), league: current?.league?.name ?? "League", name: `${current?.homeTeam?.name} vs ${current?.awayTeam?.name}`, time: dayjs.tz(current.date, 'Africa/Nairobi').utc().unix() })
+        })        
+        total.push({ awayTeam: current.awayTeam.name ?? "Away team", homeTeam: current.homeTeam.name ?? "Home team", poster, id: current.id.toString(), league: current?.league?.name ?? "League", name: `${current?.homeTeam?.name} vs ${current?.awayTeam?.name}`, time: dayjs.tz(current.date).utc(true).unix() })
         return total
     }, Promise.resolve([]))
     await saveToCache('football-highlight-events', JSON.stringify(events), 26 * 60 * 60)
@@ -82,14 +82,14 @@ const EventsApiCronWithCheckIn = Sentry.cron.instrumentCron(CronJob, "fetchRapid
 
 export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("30 13 * * *", async () => {
     const footabllEvents = await fetchfootballLiveStreamEvents()
-    await saveToCache("rapid-football-events", JSON.stringify(footabllEvents), 26 * 60 * 60)
-    console.log("finished rapid events")
+    await saveToCache("rapid-football-events", JSON.stringify(footabllEvents), 26 * 60 * 60)    
 })
 
 export const FootballScheduleCronBuilder = new CronJob("*/30 * * * *", async () => {
     const footballHighlightEvents: IFootballEvent[] = await getFromCache('football-highlight-events')
     const rapidApiEvents:RapidApiLiveFootballEvent [] = await getFromCache('rapid-football-events')
     const ppvLandFootballFixture = await getPpvLandFootballEvents({})
+    // const ppvLandMissing = []
     const daddyLiveEvent: IDaddyliveEvent[] = ((await getFromCache('catalog')) as IDaddyliveEvent[]).filter((a) => a.type == "football" || a.type == "soccer")
     const footballEvents = await footballHighlightEvents.reduce(async (promise: Promise<IFootballEventCatalog[]>, current) => {
         // daddylive streams
