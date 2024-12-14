@@ -28,7 +28,7 @@ buildDaddyLiveCatalog.start()
 fetchFootballFixturesCron.start()
 fetchRapidFootballEvents.start()
 FootballScheduleCronBuilder.start()
-serveHTTP(addonInterface, { port: Number(process.env.PORT ?? 56397) })
+serveHTTP(addonInterface, { port: Number(process.env.PORT ?? 56397),cacheMaxAge: 60  })
 
 // when you've deployed your addon, un-comment this line
 // publishToCentral("https://my-addon.awesome/manifest.json")
