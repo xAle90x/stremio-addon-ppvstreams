@@ -27,6 +27,6 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/.env ./.env
 COPY --from=build /app/package.json ./
 
-EXPOSE 3002 3002
+EXPOSE 56397 56397
 
 CMD yarn start
