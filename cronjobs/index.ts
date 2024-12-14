@@ -1,11 +1,13 @@
-import { fetchDaddyliveSchedule, fetchFootballHighlightEvents, fetchWorldWideSportStreams } from "catalogs/streams"
+import { fetchDaddyliveSchedule, fetchFootballHighlightEvents, fetchfootballLiveStreamEvents, fetchWorldWideSportStreams } from "api/streams"
 import { CronJob } from "cron"
-import { saveToCache } from "utils/redis"
+import { getFromCache, saveToCache } from "utils/redis"
 import { Stream } from "stremio-addon-sdk"
 import { compareDaddyliveStreams } from "utils/index"
 import { cricketRapidApiSchedule } from "catalogs/cricket"
 import { createEventPoster, createFootbalPoster } from "utils/poster"
 import dayjs from "dayjs"
+import * as Sentry from "@sentry/node"
+import { IFootballEventCatalog, RapidApiLiveFootballEvent } from "types"
 
 export interface IDaddyliveEvent {
     id: string
@@ -26,7 +28,8 @@ export interface IFootballEvent {
     time: number
     poster?: string
 }
-export const buildCricketCatalogCron = new CronJob("0 1,8,16 * * *", async () => {
+// export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
+export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
     const channels = await fetchWorldWideSportStreams()
     const events = (await fetchDaddyliveSchedule())
     const cricket = await cricketRapidApiSchedule()
@@ -45,6 +48,11 @@ export const buildCricketCatalogCron = new CronJob("0 1,8,16 * * *", async () =>
                         total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date, poster })
                     } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
                 } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
+            } else if (current.type == "soccer") {
+                const [league, teams] = current.name.split(" : ")
+                const [homeTeam, awayTeam] = teams.split("vs")
+                const name = `${league}: ${homeTeam.trim()} vs ${awayTeam.trim()}`
+                total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: name, description: current.name, type: "football", streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
             } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
         }
         return total
@@ -52,7 +60,7 @@ export const buildCricketCatalogCron = new CronJob("0 1,8,16 * * *", async () =>
     saveToCache('catalog', JSON.stringify(filtered), 12 * 60 * 60)
 })
 
-export const fetchFootballFixturesCron = new CronJob("30 00 * * *", async () => {
+export const fetchFootballFixturesCron = new CronJob("07 15 * * *", async () => {
     const footballEvents = await fetchFootballHighlightEvents()
 
     const events = await footballEvents.reduce(async (all: Promise<IFootballEvent[]>, current) => {
@@ -66,5 +74,47 @@ export const fetchFootballFixturesCron = new CronJob("30 00 * * *", async () => 
         return total
     }, Promise.resolve([]))
     await saveToCache('football-highlight-events', JSON.stringify(events), 26 * 60 * 60)
+})
 
+
+const EventsApiCronWithCheckIn = Sentry.cron.instrumentCron(CronJob, "fetchRapidFootballEvents")
+
+export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("30 13 * * *", async () => {
+    const footabllEvents = await fetchfootballLiveStreamEvents()
+    await saveToCache("rapid-football-events", JSON.stringify(footabllEvents), 26 * 60 * 60)
+    console.log("finished rapid events")
+})
+
+export const FootballScheduleCronBuilder = new CronJob("44 18 * * *", async () => {
+    const footballHighlightEvents: IFootballEvent[] = await getFromCache('football-highlight-events')
+    const rapidApiEvents:RapidApiLiveFootballEvent [] = await getFromCache('rapid-football-events')
+    const daddyLiveEvent: IDaddyliveEvent[] = ((await getFromCache('catalog')) as IDaddyliveEvent[]).filter((a) => a.type == "football" || a.type == "soccer")
+    const footballEvents = footballHighlightEvents.reduce((total: IFootballEventCatalog[], current) => {
+        // daddylive streams
+        const regex = new RegExp(`${current.homeTeam.trim()} vs ${current.awayTeam.trim()}`, 'gi')
+        const daddyliveStreams = daddyLiveEvent.find((a) => a.name.match(regex))?.streams     
+        const streams: Stream[] = []
+        const rapidStreams = rapidApiEvents.find((a)=>a.home_name.trim().match(RegExp(current.homeTeam.trim(),'gi')))
+        if (daddyliveStreams != null && daddyliveStreams?.length > 0) {
+            streams.push(...daddyliveStreams)
+        }
+        if (rapidStreams) {
+            streams.push({name: "SD",externalUrl: rapidStreams.link,title: "SD",url: rapidStreams.link,behaviorHints:{notWebReady: true}})
+        }
+        
+        if (streams.length > 0) {
+            const event: IFootballEventCatalog = {
+                id: `${current.id}-football`,
+                time: current.time,
+                name: current.name,
+                description: current.name,
+                poster: current.poster!,
+                streams
+            }
+            total.push(event)
+        }
+        return total
+    }, [])
+    saveToCache('football-catalog', JSON.stringify(footballEvents), 12 * 60 * 60)
+    // for each event reduce and build catalog
 })

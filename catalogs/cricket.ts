@@ -16,8 +16,7 @@ export const cricketCatalogBuilder = async ({ search }: { search?: string }): Pr
             const matches = cacheExist as IDaddyliveEvent[]
             const filtered = matches.filter((a) => {
                 if (a.type == "cricket") {
-                    const startsAtMs = a.time
-                    console.log(thirtyMinutes)
+                    const startsAtMs = a.time                    
                     if ((startsAtMs <= now) || (startsAtMs > now && startsAtMs <= thirtyMinutes)) {
                         return true
                     }

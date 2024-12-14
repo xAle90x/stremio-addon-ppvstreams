@@ -2,7 +2,7 @@
 import * as Sentry from "@sentry/node"
 import axios from "axios";
 import dayjs from "dayjs";
-import { FootballHighlightEvent } from "types";
+import { FootballHighlightEvent, RapidApiLiveFootballEvent } from "types";
 import { getFromCache, saveToCache } from "utils/redis";
 interface DaddyliveStream {
     id: string;
@@ -126,5 +126,51 @@ const eventFetcher = async (offset: number): Promise<FootballHighlightEvent[]> =
     } catch (error) {
         Sentry.captureException(error)
         return []
+    }
+}
+
+export const fetchfootballLiveStreamEvents = async (): Promise<RapidApiLiveFootballEvent[]> => {
+    try {
+        const events: RapidApiLiveFootballEvent[] = (await axios.request({
+            method: 'GET',
+            url: 'https://football-live-stream-api.p.rapidapi.com/all-match',
+            headers: {
+                'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API,
+                'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
+            }
+        })).data['result'] ?? []
+        const iteration = events.length > 49 ? 49 : events.length // loop 49 times to only go upto the api limit
+        const eventsWithLinks = []
+        for (let index = 0; index < iteration; index++) {
+            const link = await eventLinkFetcher(events[index].id)        
+            if (link) {
+                eventsWithLinks.push({ ...events[index], link })
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+        }
+        return eventsWithLinks
+    } catch (error) {
+        Sentry.captureException(error)
+        return []
+    }
+}
+
+const eventLinkFetcher = async (id: string): Promise<string | null> => {
+    try {
+        const link = (await axios.request({
+            method: 'GET',
+            url: `https://football-live-stream-api.p.rapidapi.com/link/${id}`,
+            headers: {
+                'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API,
+                'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
+            }
+        })).data['url']
+        if (link == "") {
+            return null
+        }
+        return link
+    } catch (error) {
+        Sentry.captureException(error)
+        return null
     }
 }

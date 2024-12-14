@@ -75,8 +75,7 @@ export async function createFootbalPoster({ homeTeam, awayTeam, league }: { home
         ctx.fillRect(0, 0, posterWidth, posterHeight);
 
         // Load the images
-        const [img1, img2, img3] = [await loadImage((await axios.get(homeTeam, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(league, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(awayTeam, { responseType: "arraybuffer" })).data)]
-        console.log("i load all images")
+        const [img1, img2, img3] = [await loadImage((await axios.get(homeTeam, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(league, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(awayTeam, { responseType: "arraybuffer" })).data)]        
         // Calculate positions for the images
         const centerX = posterWidth / 2;
         const centerY = posterHeight / 2;

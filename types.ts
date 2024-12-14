@@ -1,3 +1,5 @@
+import { Stream as StremioStream } from "stremio-addon-sdk";
+
 export interface IPPVLandStream {
     category: string;
     id: number;
@@ -103,3 +105,29 @@ export interface Score {
     penalties: null;
 }
 export type Description = "Finished" | "To be announced" | "Not started" | "Postponed";
+
+export interface RapidApiLiveFootballEvent {
+    league: string;
+    home_flag: string;
+    home_name: string;
+    away_flag: string;
+    away_name: string;
+    date: string;
+    time: string;
+    status: Status;
+    score: string;
+    id: string;
+    link?: string
+}
+
+
+export interface IFootballEventCatalog {
+    id: string
+    time: number
+    name: string
+    description: string
+    poster: string
+    streams: StremioStream []
+}
+
+export type Status = "Live" | "Uncoming";
