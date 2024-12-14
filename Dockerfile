@@ -1,11 +1,17 @@
-FROM node:20-alpine as base
+FROM node:20-alpine AS base
 
-
+RUN apk add python3 \
+pkgconfig \
+pixman-dev \
+cairo-dev \
+pango-dev \
+build-base \
+npm
 WORKDIR /app
 COPY package.json yarn.lock ./
 # Echo the value of the ENV_FILE argument
 # 
-FROM base as build
+FROM base AS build
 
 
 # install all dependencies, including devDependencies
@@ -20,7 +26,7 @@ RUN yarn --production
 # 
 # release stage
 # 
-FROM base as release
+FROM base AS release
 # copy production dependencies
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
@@ -29,4 +35,4 @@ COPY --from=build /app/package.json ./
 
 EXPOSE 80 56397
 
-CMD yarn start
+CMD ["yarn" "start"]
