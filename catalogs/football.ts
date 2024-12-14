@@ -55,8 +55,9 @@ export const getFootballCatalog = async ({ search }: { search?: string }): Promi
         const footBallCatalog: IFootballEventCatalog[] = await getFromCache('football-catalog')
         const catalog = footBallCatalog.filter(stream => {
             const startsAtMs = stream.time
+            const endTime = dayjs.unix(startsAtMs).add(150, 'minutes').unix()
             // Convert end time to milliseconds
-            return (startsAtMs <= now) || // Currently in progress
+            return (startsAtMs <= now && now < endTime) || // Currently in progress and not ended
                 (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
         }).map((a) => (<MetaPreview>{ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name }))
         return [...ppvLand, ...catalog]

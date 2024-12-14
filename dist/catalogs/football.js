@@ -100,8 +100,9 @@ const getFootballCatalog = (_a) => __awaiter(void 0, [_a], void 0, function* ({ 
         const footBallCatalog = yield (0, redis_1.getFromCache)('football-catalog');
         const catalog = footBallCatalog.filter(stream => {
             const startsAtMs = stream.time;
+            const endTime = dayjs_1.default.unix(startsAtMs).add(150, 'minutes').unix();
             // Convert end time to milliseconds
-            return (startsAtMs <= now) || // Currently in progress
+            return (startsAtMs <= now && now < endTime) || // Currently in progress and not ended
                 (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
         }).map((a) => ({ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name }));
         return [...ppvLand, ...catalog];

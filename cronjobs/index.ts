@@ -85,7 +85,7 @@ export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("30 13 * * 
     console.log("finished rapid events")
 })
 
-export const FootballScheduleCronBuilder = new CronJob("44 18 * * *", async () => {
+export const FootballScheduleCronBuilder = new CronJob("*/30 * * * *", async () => {
     const footballHighlightEvents: IFootballEvent[] = await getFromCache('football-highlight-events')
     const rapidApiEvents:RapidApiLiveFootballEvent [] = await getFromCache('rapid-football-events')
     const daddyLiveEvent: IDaddyliveEvent[] = ((await getFromCache('catalog')) as IDaddyliveEvent[]).filter((a) => a.type == "football" || a.type == "soccer")
