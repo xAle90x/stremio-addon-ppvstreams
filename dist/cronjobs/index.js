@@ -113,7 +113,7 @@ exports.fetchRapidFootballEvents = new EventsApiCronWithCheckIn("30 13 * * *", (
     yield (0, redis_1.saveToCache)("rapid-football-events", JSON.stringify(footabllEvents), 26 * 60 * 60);
     console.log("finished rapid events");
 }));
-exports.FootballScheduleCronBuilder = new cron_1.CronJob("44 18 * * *", () => __awaiter(void 0, void 0, void 0, function* () {
+exports.FootballScheduleCronBuilder = new cron_1.CronJob("*/30 * * * *", () => __awaiter(void 0, void 0, void 0, function* () {
     const footballHighlightEvents = yield (0, redis_1.getFromCache)('football-highlight-events');
     const rapidApiEvents = yield (0, redis_1.getFromCache)('rapid-football-events');
     const daddyLiveEvent = (yield (0, redis_1.getFromCache)('catalog')).filter((a) => a.type == "football" || a.type == "soccer");
