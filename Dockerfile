@@ -35,4 +35,4 @@ COPY --from=build /app/package.json ./
 
 EXPOSE 80 56397
 
-CMD yarn start
+ENTRYPOINT ["node", "dist/server.js"]
