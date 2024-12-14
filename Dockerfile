@@ -1,5 +1,5 @@
 # Step 1: Use an official Node.js image as the base image
-FROM node:18 AS build
+FROM node:20 AS build
 
 # Step 2: Set the working directory inside the container
 WORKDIR /app
@@ -17,7 +17,7 @@ COPY . .
 RUN yarn build
 
 # Step 7: Use a minimal Node.js image for the production stage
-FROM node:18-slim
+FROM node:20-slim
 
 # Step 8: Set the working directory for the production container
 WORKDIR /app
