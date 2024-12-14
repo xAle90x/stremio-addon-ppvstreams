@@ -43,8 +43,9 @@ export const fetchWorldWideSportStreams = async (): Promise<DaddyliveStream[]> =
         } else {
             const request = await fetch('https://848b3516657c-worldwide-sports-tv.baby-beamup.club/catalog/tv/tv.json');
             const response = await request.json()
-            saveToCache('worldwide-events', JSON.stringify(response['metas']), 24 * 60 * 60)
-            return (response['metas'] ?? [])?.filter((a: any) => a.genres.includes('UK') || a.genres.includes('USA'))
+            const metas = (response['metas'] ?? [])?.filter((a: any) => a.genres.includes('UK') || a.genres.includes('USA'))
+            saveToCache('worldwide-events', JSON.stringify(metas), 24 * 60 * 60)
+            return metas
         }
     } catch (error) {
         Sentry.captureException(error)
