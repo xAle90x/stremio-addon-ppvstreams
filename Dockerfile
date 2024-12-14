@@ -1,4 +1,4 @@
-FROM node:20-slim as base
+FROM node:20-alpine as base
 
 
 WORKDIR /app
@@ -27,6 +27,6 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/.env ./.env
 COPY --from=build /app/package.json ./
 
-EXPOSE 56397 56397
+EXPOSE 80 56397
 
 CMD yarn start
