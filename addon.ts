@@ -190,5 +190,5 @@ builder.defineStreamHandler(async ({ id}) => {
 },)
 
 
-export default builder.()
+export default builder.getInterface()
 
