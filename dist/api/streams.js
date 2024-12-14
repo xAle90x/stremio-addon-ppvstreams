@@ -46,6 +46,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.fetchfootballLiveStreamEvents = exports.fetchFootballHighlightEvents = exports.fetchDaddyliveSchedule = exports.fetchWorldWideSportStreams = void 0;
+exports.getPPvLandStreams = getPPvLandStreams;
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const Sentry = __importStar(require("@sentry/node"));
 const axios_1 = __importDefault(require("axios"));
@@ -87,13 +88,11 @@ const fetchDaddyliveSchedule = () => __awaiter(void 0, void 0, void 0, function*
             const date = (0, dayjs_1.default)(`${day} ${month} ${year}`);
             const ukDateTime = `${year}-${date.format('MM')}-${day}T`;
             const ukTimezone = "Europe/London";
-            // Convert to Kenya timezone (EAT is UTC+3)
-            const kenyaTimezone = "Africa/Nairobi";
             for (const [showKey, showValue] of Object.entries(value)) {
                 const type = showKey.trim().replace(/ /gi, "-").toLowerCase();
                 for (let index = 0; index < showValue.length; index++) {
                     const event = showValue[index];
-                    const kenyaUnixTime = dayjs_1.default.tz(`${ukDateTime}${event['time']}:00`, ukTimezone).tz(kenyaTimezone).unix();
+                    const kenyaUnixTime = dayjs_1.default.tz(`${ukDateTime}${event['time']}:00`, ukTimezone).utc().unix();
                     events.push({ type, date: kenyaUnixTime, name: event.event, channels: Array.isArray(event.channels) ? (_b = event.channels) === null || _b === void 0 ? void 0 : _b.map((a) => a.channel_name) : (_c = Object.values(event.channels)) === null || _c === void 0 ? void 0 : _c.map((a) => a.channel_name) });
                 }
             }
@@ -200,3 +199,26 @@ const eventLinkFetcher = (id) => __awaiter(void 0, void 0, void 0, function* () 
         return null;
     }
 });
+function getPPvLandStreams(id) {
+    return __awaiter(this, void 0, void 0, function* () {
+        var _a, _b, _c, _d, _e, _f;
+        try {
+            const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:server" }, (span) => span);
+            const streams = yield fetch(`https://ppv.land/api/streams/${id}`);
+            const response = yield streams.json();
+            transaction.end();
+            return [
+                {
+                    name: (_b = (_a = response === null || response === void 0 ? void 0 : response.data) === null || _a === void 0 ? void 0 : _a.name) !== null && _b !== void 0 ? _b : "N/A",
+                    url: (_d = (_c = response === null || response === void 0 ? void 0 : response.data) === null || _c === void 0 ? void 0 : _c.source) !== null && _d !== void 0 ? _d : "N/A",
+                    title: (_f = (_e = response === null || response === void 0 ? void 0 : response.data) === null || _e === void 0 ? void 0 : _e.tag) !== null && _f !== void 0 ? _f : "N/A",
+                    behaviorHints: { notWebReady: true, },
+                },
+            ];
+        }
+        catch (error) {
+            Sentry.captureException(error);
+            return [];
+        }
+    });
+}

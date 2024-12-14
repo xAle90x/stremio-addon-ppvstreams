@@ -45,7 +45,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.footballStreamsHandler = exports.footballMetaBuilder = exports.getFootballCatalog = void 0;
+exports.footballStreamsHandler = exports.footballMetaBuilder = exports.getFootballCatalog = exports.getPpvLandFootballEvents = void 0;
 const Sentry = __importStar(require("@sentry/node"));
 const dayjs_1 = __importDefault(require("dayjs"));
 const redis_1 = require("utils/redis");
@@ -53,20 +53,13 @@ const redis_1 = require("utils/redis");
 const getPpvLandFootballEvents = (_a) => __awaiter(void 0, [_a], void 0, function* ({ search }) {
     var _b;
     const transaction = Sentry.startSpanManual({ name: `Get football catalogue`, op: "http.server" }, (span) => span);
-    const now = Date.now();
-    const thirtyMinutes = 30 * 60 * 1000;
     const matches = yield fetch('https://ppv.land/api/streams');
     const response = yield matches.json();
     const results = (_b = response.streams) !== null && _b !== void 0 ? _b : [];
     const live = results
         .filter(a => a.category.toLowerCase().replace(/ /gi, "-") == 'football'.toLowerCase())
         .map(a => a.streams)
-        .flat(2).filter(stream => {
-        const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
-        // Convert end time to milliseconds
-        return (startsAtMs <= now) || // Currently in progress
-            (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
-    });
+        .flat(2);
     if (search) {
         const regEx = RegExp(search, 'i');
         return live.filter((a) => regEx.test(a.name) || regEx.test(a.category_name) || regEx.test(a.tag)).map((resp) => ({
@@ -92,20 +85,26 @@ const getPpvLandFootballEvents = (_a) => __awaiter(void 0, [_a], void 0, functio
         logo: resp.poster,
     }));
 });
+exports.getPpvLandFootballEvents = getPpvLandFootballEvents;
 const getFootballCatalog = (_a) => __awaiter(void 0, [_a], void 0, function* ({ search }) {
     try {
-        const now = (0, dayjs_1.default)().unix();
+        const now = (0, dayjs_1.default)().tz('Africa/Nairobi').unix();
         const thirtyMinutes = (0, dayjs_1.default)().add(30, 'minutes').unix();
-        const ppvLand = yield getPpvLandFootballEvents({ search });
         const footBallCatalog = yield (0, redis_1.getFromCache)('football-catalog');
         const catalog = footBallCatalog.filter(stream => {
-            const startsAtMs = stream.time;
-            const endTime = dayjs_1.default.unix(startsAtMs).add(150, 'minutes').unix();
+            const startsAtMs = dayjs_1.default.unix(stream.time).utc().tz('Africa/Nairobi').unix();
+            console.log(startsAtMs);
+            const endTime = dayjs_1.default.unix(startsAtMs).utc().add(150, 'minutes').tz('Africa/Nairobi').unix();
+            console.log(endTime);
+            console.log(stream.name);
             // Convert end time to milliseconds
-            return (startsAtMs <= now && now < endTime) || // Currently in progress and not ended
+            return (startsAtMs <= now) || // Currently in progress and not ended
                 (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
         }).map((a) => ({ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name }));
-        return [...ppvLand, ...catalog];
+        if (search) {
+            return catalog.filter((a) => a.name.match(RegExp(search, 'gi')));
+        }
+        return catalog;
     }
     catch (error) {
         Sentry.captureException(error);

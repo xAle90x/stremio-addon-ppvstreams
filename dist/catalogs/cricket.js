@@ -52,8 +52,8 @@ const dayjs_1 = __importDefault(require("dayjs"));
 const redis_1 = require("utils/redis");
 const cricketCatalogBuilder = (_a) => __awaiter(void 0, [_a], void 0, function* ({ search }) {
     try {
-        const now = dayjs_1.default.tz((0, dayjs_1.default)(), 'Africa/Nairobi').unix();
-        const thirtyMinutes = dayjs_1.default.tz((0, dayjs_1.default)(), 'Africa/Nairobi').add(45, 'minutes').unix();
+        const now = dayjs_1.default.tz((0, dayjs_1.default)().utc(), 'Africa/Nairobi').unix();
+        const thirtyMinutes = dayjs_1.default.tz((0, dayjs_1.default)().utc(), 'Africa/Nairobi').add(45, 'minutes').unix();
         const cacheExist = yield (0, redis_1.getFromCache)('catalog');
         if (!cacheExist) {
             return [];

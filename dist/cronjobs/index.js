@@ -54,6 +54,7 @@ const cricket_1 = require("catalogs/cricket");
 const poster_1 = require("utils/poster");
 const dayjs_1 = __importDefault(require("dayjs"));
 const Sentry = __importStar(require("@sentry/node"));
+const football_1 = require("catalogs/football");
 // export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
 exports.buildDaddyLiveCatalog = new cron_1.CronJob("0 1,8,16 * * *", () => __awaiter(void 0, void 0, void 0, function* () {
     const channels = yield (0, streams_1.fetchWorldWideSportStreams)();
@@ -102,7 +103,7 @@ exports.fetchFootballFixturesCron = new cron_1.CronJob("07 15 * * *", () => __aw
             awayTeam: (_c = (_b = current === null || current === void 0 ? void 0 : current.awayTeam) === null || _b === void 0 ? void 0 : _b.logo) !== null && _c !== void 0 ? _c : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
             league: (_e = (_d = current === null || current === void 0 ? void 0 : current.league) === null || _d === void 0 ? void 0 : _d.logo) !== null && _e !== void 0 ? _e : "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images"
         });
-        total.push({ awayTeam: (_f = current.awayTeam.name) !== null && _f !== void 0 ? _f : "Away team", homeTeam: (_g = current.homeTeam.name) !== null && _g !== void 0 ? _g : "Home team", poster, id: current.id.toString(), league: (_j = (_h = current === null || current === void 0 ? void 0 : current.league) === null || _h === void 0 ? void 0 : _h.name) !== null && _j !== void 0 ? _j : "League", name: `${(_k = current === null || current === void 0 ? void 0 : current.homeTeam) === null || _k === void 0 ? void 0 : _k.name} vs ${(_l = current === null || current === void 0 ? void 0 : current.awayTeam) === null || _l === void 0 ? void 0 : _l.name}`, time: dayjs_1.default.tz(current.date, 'Africa/Nairobi').unix() });
+        total.push({ awayTeam: (_f = current.awayTeam.name) !== null && _f !== void 0 ? _f : "Away team", homeTeam: (_g = current.homeTeam.name) !== null && _g !== void 0 ? _g : "Home team", poster, id: current.id.toString(), league: (_j = (_h = current === null || current === void 0 ? void 0 : current.league) === null || _h === void 0 ? void 0 : _h.name) !== null && _j !== void 0 ? _j : "League", name: `${(_k = current === null || current === void 0 ? void 0 : current.homeTeam) === null || _k === void 0 ? void 0 : _k.name} vs ${(_l = current === null || current === void 0 ? void 0 : current.awayTeam) === null || _l === void 0 ? void 0 : _l.name}`, time: dayjs_1.default.tz(current.date, 'Africa/Nairobi').utc().unix() });
         return total;
     }), Promise.resolve([]));
     yield (0, redis_1.saveToCache)('football-highlight-events', JSON.stringify(events), 26 * 60 * 60);
@@ -116,13 +117,21 @@ exports.fetchRapidFootballEvents = new EventsApiCronWithCheckIn("30 13 * * *", (
 exports.FootballScheduleCronBuilder = new cron_1.CronJob("*/30 * * * *", () => __awaiter(void 0, void 0, void 0, function* () {
     const footballHighlightEvents = yield (0, redis_1.getFromCache)('football-highlight-events');
     const rapidApiEvents = yield (0, redis_1.getFromCache)('rapid-football-events');
+    const ppvLandFootballFixture = yield (0, football_1.getPpvLandFootballEvents)({});
     const daddyLiveEvent = (yield (0, redis_1.getFromCache)('catalog')).filter((a) => a.type == "football" || a.type == "soccer");
-    const footballEvents = footballHighlightEvents.reduce((total, current) => {
+    const footballEvents = yield footballHighlightEvents.reduce((promise, current) => __awaiter(void 0, void 0, void 0, function* () {
         var _a;
         // daddylive streams
+        const total = yield promise;
         const regex = new RegExp(`${current.homeTeam.trim()} vs ${current.awayTeam.trim()}`, 'gi');
         const daddyliveStreams = (_a = daddyLiveEvent.find((a) => a.name.match(regex))) === null || _a === void 0 ? void 0 : _a.streams;
+        // ppv land exits
         const streams = [];
+        const existsPvvLand = ppvLandFootballFixture.find((a) => a.name.match(RegExp(`${current.homeTeam} vs ${current.awayTeam}`, 'gi')));
+        if (existsPvvLand) {
+            const stream = yield (0, streams_1.getPPvLandStreams)(existsPvvLand.id);
+            streams.push(...stream);
+        }
         const rapidStreams = rapidApiEvents.find((a) => a.home_name.trim().match(RegExp(current.homeTeam.trim(), 'gi')));
         if (daddyliveStreams != null && (daddyliveStreams === null || daddyliveStreams === void 0 ? void 0 : daddyliveStreams.length) > 0) {
             streams.push(...daddyliveStreams);
@@ -142,7 +151,7 @@ exports.FootballScheduleCronBuilder = new cron_1.CronJob("*/30 * * * *", () => _
             total.push(event);
         }
         return total;
-    }, []);
+    }), Promise.resolve([]));
     (0, redis_1.saveToCache)('football-catalog', JSON.stringify(footballEvents), 12 * 60 * 60);
     // for each event reduce and build catalog
 }));

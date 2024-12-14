@@ -7,8 +7,8 @@ import { IRapidCricketEvent } from "types"
 import { getFromCache, saveToCache } from "utils/redis"
 export const cricketCatalogBuilder = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
     try {
-        const now = dayjs.tz(dayjs(), 'Africa/Nairobi').unix()
-        const thirtyMinutes = dayjs.tz(dayjs(), 'Africa/Nairobi').add(45, 'minutes').unix()
+        const now = dayjs.tz(dayjs().utc(), 'Africa/Nairobi').unix()
+        const thirtyMinutes = dayjs.tz(dayjs().utc(), 'Africa/Nairobi').add(45, 'minutes').unix()
         const cacheExist = await getFromCache('catalog')
         if (!cacheExist) {
             return []

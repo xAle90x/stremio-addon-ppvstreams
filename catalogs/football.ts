@@ -5,22 +5,15 @@ import { IFootballEventCatalog, IPPVLandStream } from "types";
 import { getFromCache } from "utils/redis";
 // get ppv land footballEvents
 
-const getPpvLandFootballEvents = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
-    const transaction = Sentry.startSpanManual({ name: `Get football catalogue`, op: "http.server" }, (span) => span)
-    const now = Date.now()
-    const thirtyMinutes = 30 * 60 * 1000;
+export const getPpvLandFootballEvents = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
+    const transaction = Sentry.startSpanManual({ name: `Get football catalogue`, op: "http.server" }, (span) => span)    
     const matches = await fetch('https://ppv.land/api/streams')
     const response = await matches.json()
     const results: IPPVLandStream[] = response.streams ?? []
     const live = results
         .filter(a => a.category.toLowerCase().replace(/ /gi, "-") == 'football'.toLowerCase())
         .map(a => a.streams)
-        .flat(2).filter(stream => {
-            const startsAtMs = stream.starts_at * 1000; // Convert start time to milliseconds
-            // Convert end time to milliseconds
-            return (startsAtMs <= now) || // Currently in progress
-                (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
-        })
+        .flat(2)
     if (search) {
         const regEx = RegExp(search, 'i')
         return live.filter((a) => regEx.test(a.name) || regEx.test(a.category_name) || regEx.test(a.tag)).map((resp) => ({
@@ -49,18 +42,23 @@ const getPpvLandFootballEvents = async ({ search }: { search?: string }): Promis
 
 export const getFootballCatalog = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
     try {
-        const now = dayjs().unix()
+        const now = dayjs().tz('Africa/Nairobi').unix()
         const thirtyMinutes = dayjs().add(30, 'minutes').unix()
-        const ppvLand = await getPpvLandFootballEvents({ search })
         const footBallCatalog: IFootballEventCatalog[] = await getFromCache('football-catalog')
         const catalog = footBallCatalog.filter(stream => {
-            const startsAtMs = stream.time
-            const endTime = dayjs.unix(startsAtMs).add(150, 'minutes').unix()
+            const startsAtMs = dayjs.unix(stream.time).utc().tz('Africa/Nairobi').unix()
+            console.log(startsAtMs)
+            const endTime = dayjs.unix(startsAtMs).utc().add(150, 'minutes').tz('Africa/Nairobi').unix()
+            console.log(endTime)
+            console.log(stream.name)
             // Convert end time to milliseconds
-            return (startsAtMs <= now && now < endTime) || // Currently in progress and not ended
+            return (startsAtMs <= now ) || // Currently in progress and not ended
                 (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
         }).map((a) => (<MetaPreview>{ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name }))
-        return [...ppvLand, ...catalog]
+        if (search) {
+            return catalog.filter((a) => a.name.match(RegExp(search, 'gi')))
+        }
+        return catalog
     } catch (error) {
         Sentry.captureException(error)
         return []

@@ -2,8 +2,9 @@
 import * as Sentry from "@sentry/node"
 import axios from "axios";
 import dayjs from "dayjs";
-import { FootballHighlightEvent, RapidApiLiveFootballEvent } from "types";
+import { FootballHighlightEvent, IPPLandStreamDetails, RapidApiLiveFootballEvent } from "types";
 import { getFromCache, saveToCache } from "utils/redis";
+import { Stream as StremioStream } from "stremio-addon-sdk";
 interface DaddyliveStream {
     id: string;
     type: string;
@@ -65,15 +66,11 @@ export const fetchDaddyliveSchedule = async (): Promise<DaddyliveSchedule[]> => 
             const date = dayjs(`${day} ${month} ${year}`)
             const ukDateTime = `${year}-${date.format('MM')}-${day}T`;
             const ukTimezone = "Europe/London";
-            // Convert to Kenya timezone (EAT is UTC+3)
-            const kenyaTimezone = "Africa/Nairobi";
-
-
             for (const [showKey, showValue] of Object.entries(value)) {
                 const type = showKey.trim().replace(/ /gi, "-").toLowerCase()
                 for (let index = 0; index < showValue.length; index++) {
                     const event = showValue[index]
-                    const kenyaUnixTime = dayjs.tz(`${ukDateTime}${event['time']}:00`, ukTimezone).tz(kenyaTimezone).unix()
+                    const kenyaUnixTime = dayjs.tz(`${ukDateTime}${event['time']}:00`, ukTimezone).utc().unix()
                     events.push({ type, date: kenyaUnixTime, name: event.event, channels: Array.isArray(event.channels) ? event.channels?.map((a: any) => a.channel_name) : Object.values(event.channels)?.map((a: any) => a.channel_name) })
                 }
             }
@@ -142,7 +139,7 @@ export const fetchfootballLiveStreamEvents = async (): Promise<RapidApiLiveFootb
         const iteration = events.length > 49 ? 49 : events.length // loop 49 times to only go upto the api limit
         const eventsWithLinks = []
         for (let index = 0; index < iteration; index++) {
-            const link = await eventLinkFetcher(events[index].id)        
+            const link = await eventLinkFetcher(events[index].id)
             if (link) {
                 eventsWithLinks.push({ ...events[index], link })
             }
@@ -172,5 +169,25 @@ const eventLinkFetcher = async (id: string): Promise<string | null> => {
     } catch (error) {
         Sentry.captureException(error)
         return null
+    }
+}
+
+export async function getPPvLandStreams(id: string): Promise<StremioStream[]> {
+    try {
+        const transaction = Sentry.startSpanManual({ name: `Get ${id} streams link`, op: "http:server" }, (span) => span)
+        const streams = await fetch(`https://ppv.land/api/streams/${id}`)
+        const response: IPPLandStreamDetails = await streams.json()
+        transaction.end()
+        return [
+            {
+                name: response?.data?.name ?? "N/A",
+                url: response?.data?.source ?? "N/A",
+                title: response?.data?.tag ?? "N/A",
+                behaviorHints: { notWebReady: true, },
+            },
+        ]
+    } catch (error) {
+        Sentry.captureException(error)
+        return []
     }
 }
