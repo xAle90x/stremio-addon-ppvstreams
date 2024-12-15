@@ -129,11 +129,18 @@ const eventFetcher = async (offset: number): Promise<FootballHighlightEvent[]> =
 
 export const fetchfootballLiveStreamEvents = async (): Promise<RapidApiLiveFootballEvent[]> => {
     try {
+        const keys = {
+            14: process.env.RAPID_LIVE_FOOTBALL_API!,
+            16: process.env.RAPID_LIVE_FOOTBALL_API_2!,
+            20: process.env.RAPID_LIVE_FOOTBALL_API_3!,            
+        }
+        const currentHour = new Date().getHours()
         const events: RapidApiLiveFootballEvent[] = (await axios.request({
             method: 'GET',
             url: 'https://football-live-stream-api.p.rapidapi.com/all-match',
             headers: {
-                'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API,
+                // @ts-expect-error ignore typing
+                'x-rapidapi-key': keys[`${currentHour}`],
                 'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
             }
         })).data['result'] ?? []        
