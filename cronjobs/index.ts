@@ -117,7 +117,7 @@ export const FootballScheduleCronBuilder = new CronJob("*/30 * * * *", async () 
             streams.push(...daddyliveStreams)
         }
         if (rapidStreams) {
-            streams.push({name: "SD",externalUrl: rapidStreams.link,title: "SD",url: rapidStreams.link,behaviorHints:{notWebReady: true}})
+            streams.push({name: current.name,externalUrl: rapidStreams.link,title: "SD",url: rapidStreams.link,behaviorHints:{notWebReady: true}})
         }
         
         if (streams.length > 0) {
