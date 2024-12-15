@@ -29,39 +29,46 @@ export interface IFootballEvent {
     time: number
     poster?: string
 }
-// export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
+
 export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
     const channels = await fetchWorldWideSportStreams()
     const events = (await fetchDaddyliveSchedule())
     const cricket = await cricketRapidApiSchedule()
     const filtered = await events.reduce(async (totalEvents: Promise<IDaddyliveEvent[]>, current) => {
         const total = await totalEvents
-        const exists = channels.filter((a) => compareDaddyliveStreams(a.name, current.channels))
-
-        if (exists?.length > 0) {
-            if (current.type == "cricket") {
-                const awayTeam = (current.name.split("vs")?.at(-1)?.trim())
-                if (awayTeam) {
-                    const regEx = RegExp(awayTeam, 'gi')
-                    const fixture = cricket.find((a) => a.team_a.match(regEx) || a.team_b.match(regEx))
-                    if (fixture) {
-                        const poster = await createEventPoster(fixture.team_a_img, fixture.team_b_img)
-                        total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date, poster })
+        try {
+            // world wide channels is channels
+            // current event channels == current.channels
+            const exists = channels.filter((a) => compareDaddyliveStreams(a.name, current.channels))
+    
+            if (exists?.length > 0) {
+                if (current.type == "cricket") {
+                    const awayTeam = (current.name.split("vs")?.at(-1)?.trim())
+                    if (awayTeam) {
+                        const regEx = RegExp(awayTeam, 'gi')
+                        const fixture = cricket.find((a) => a.team_a.match(regEx) || a.team_b.match(regEx))
+                        if (fixture) {
+                            const poster = await createEventPoster(fixture.team_a_img, fixture.team_b_img)
+                            total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date, poster })
+                        } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
                     } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
+                } else if (current.type == "soccer") {
+                    const [league, teams] = current.name.split(" : ")
+                    const [homeTeam, awayTeam] = teams.split("vs")
+                    const name = `${league}: ${homeTeam?.trim()} vs ${awayTeam?.trim()}`
+                    total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: name, description: current.name, type: "football", streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
                 } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
-            } else if (current.type == "soccer") {
-                const [league, teams] = current.name.split(" : ")
-                const [homeTeam, awayTeam] = teams.split("vs")
-                const name = `${league}: ${homeTeam.trim()} vs ${awayTeam.trim()}`
-                total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: name, description: current.name, type: "football", streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
-            } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
+            }
+            return total
+        } catch (error) {
+            Sentry.captureException(error)
+            return total
         }
-        return total
     }, Promise.resolve([]))
-    saveToCache('catalog', JSON.stringify(filtered), 12 * 60 * 60)
+    saveToCache('catalog', JSON.stringify(filtered), 12 * 60 * 60)    
 })
 
-export const fetchFootballFixturesCron = new CronJob("45 02 * * *", async () => {
+export const fetchFootballFixturesCron = new CronJob("45 03 * * *", async () => {
     const footballEvents = await fetchFootballHighlightEvents()
 
     const events = await footballEvents.reduce(async (all: Promise<IFootballEvent[]>, current) => {
@@ -70,7 +77,7 @@ export const fetchFootballFixturesCron = new CronJob("45 02 * * *", async () => 
             homeTeam: current.homeTeam.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
             awayTeam: current?.awayTeam?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
             league: current?.league?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images"
-        })        
+        })           
         total.push({ awayTeam: current.awayTeam.name ?? "Away team", homeTeam: current.homeTeam.name ?? "Home team", poster, id: current.id.toString(), league: current?.league?.name ?? "League", name: `${current?.homeTeam?.name} vs ${current?.awayTeam?.name}`, time: dayjs.tz(current.date).utc(true).unix() })
         return total
     }, Promise.resolve([]))
@@ -125,6 +132,6 @@ export const FootballScheduleCronBuilder = new CronJob("*/30 * * * *", async () 
         }
         return total
     }, Promise.resolve([]))
-    saveToCache('football-catalog', JSON.stringify(footballEvents), 12 * 60 * 60)
+    saveToCache('football-catalog', JSON.stringify(footballEvents), 12 * 60 * 60)    
     // for each event reduce and build catalog
 })

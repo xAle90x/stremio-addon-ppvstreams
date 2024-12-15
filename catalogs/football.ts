@@ -6,7 +6,7 @@ import { getFromCache } from "utils/redis";
 // get ppv land footballEvents
 
 export const getPpvLandFootballEvents = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
-    const transaction = Sentry.startSpanManual({ name: `Get football catalogue`, op: "http.server" }, (span) => span)    
+    const transaction = Sentry.startSpanManual({ name: `Get football catalogue`, op: "http.server" }, (span) => span)
     const matches = await fetch('https://ppv.land/api/streams')
     const response = await matches.json()
     const results: IPPVLandStream[] = response.streams ?? []
@@ -42,15 +42,15 @@ export const getPpvLandFootballEvents = async ({ search }: { search?: string }):
 
 export const getFootballCatalog = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
     try {
-        const now = dayjs().tz('Africa/Nairobi').unix()
+        const now = dayjs().tz('Africa/Nairobi').unix()        
         const thirtyMinutes = dayjs().add(30, 'minutes').unix()
         const footBallCatalog: IFootballEventCatalog[] = await getFromCache('football-catalog')
         const catalog = footBallCatalog.filter(stream => {
-            const startsAtMs = dayjs.unix(stream.time).utc().tz('Africa/Nairobi').unix()            
-            const endTime = dayjs.unix(startsAtMs).utc().add(150, 'minutes').tz('Africa/Nairobi').unix()            
+            const startsAtMs = dayjs.unix(stream.time).utc().tz('Africa/Nairobi').unix()
+            const endTime = dayjs.unix(startsAtMs).utc().add(150, 'minutes').tz('Africa/Nairobi').unix()
             // Convert end time to milliseconds
-            return (startsAtMs <= now && now < endTime ) || // Currently in progress and not ended
-                (startsAtMs > now && startsAtMs <= now + thirtyMinutes); // Starts within 30 minutes
+            return (startsAtMs <= now && now < endTime) || // Currently in progress and not ended
+                (startsAtMs > now && startsAtMs <= thirtyMinutes); // Starts within 30 minutes
         }).map((a) => (<MetaPreview>{ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name }))
         if (search) {
             return catalog.filter((a) => a.name.match(RegExp(search, 'gi')))
