@@ -32,11 +32,10 @@ const manifest: Manifest = {
     { id: 'cricket', name: "Cricket", type: "tv", extra: [{ name: "search", isRequired: false }] },
     { id: 'darts', name: 'darts', type: 'tv', extra: [{ name: "search", isRequired: false }] },
   ],
-  contactEmail: "cyrilleotieno7@gmail.com",
   resources: [
     { name: 'stream', types: ['tv'] },
     { name: 'meta', types: ['tv'] },
-  ],
+  ],  
   types: ['tv'],
   name: 'ppvstreams',
   description: 'Stream your favorite live sports, featuring football (soccer), NFL, basketball, wrestling, darts, and more. Enjoy real-time access to popular games and exclusive events, all conveniently available in one place. This add-on is based on PPV Land.',
