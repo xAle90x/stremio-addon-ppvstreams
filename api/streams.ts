@@ -128,39 +128,24 @@ const eventFetcher = async (offset: number): Promise<FootballHighlightEvent[]> =
 }
 
 export const fetchfootballLiveStreamEvents = async (): Promise<RapidApiLiveFootballEvent[]> => {
-    try {
-        const keys = {
-            14: process.env.RAPID_LIVE_FOOTBALL_API!,
-            16: process.env.RAPID_LIVE_FOOTBALL_API_2!,
-            20: process.env.RAPID_LIVE_FOOTBALL_API_3!,            
-        }
-        const currentHour = new Date().getHours()
+    try {        
+        
         const events: RapidApiLiveFootballEvent[] = (await axios.request({
             method: 'GET',
             url: 'https://football-live-stream-api.p.rapidapi.com/all-match',
-            headers: {
-                // @ts-expect-error ignore typing
-                'x-rapidapi-key': keys[`${currentHour}`],
+            headers: {                
+                'x-rapidapi-key':process.env.RAPID_LIVE_FOOTBALL_API!,
                 'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
             }
-        })).data['result'] ?? []        
-        const iteration = events.length > 49 ? 49 : events.length // loop 49 times to only go upto the api limit
-        const eventsWithLinks = []
-        for (let index = 0; index < iteration; index++) {
-            const link = await eventLinkFetcher(events[index].id)
-            if (link) {
-                eventsWithLinks.push({ ...events[index], link })
-            }
-            await new Promise((resolve) => setTimeout(resolve, 1000))
-        }
-        return eventsWithLinks
+        })).data['result'] ?? []                
+        return events
     } catch (error) {
         Sentry.captureException(error)
         return []
     }
 }
 
-const eventLinkFetcher = async (id: string): Promise<string | null> => {
+export const fetchRapidFootballeventLink = async (id: string): Promise<string | null> => {
     try {
         const link = (await axios.request({
             method: 'GET',

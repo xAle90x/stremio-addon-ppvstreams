@@ -8,7 +8,7 @@ import { serveHTTP } from "stremio-addon-sdk"
 import addonInterface from "./addon"
 import * as Sentry from "@sentry/node"
 import { nodeProfilingIntegration } from "@sentry/profiling-node"
-import { buildDaddyLiveCatalog, fetchFootballFixturesCron, fetchRapidFootballEvents, FootballScheduleCronBuilder } from "cronjobs"
+import { buildDaddyLiveCatalog, fetchFootballFixturesCron,  fetchRapidFootballEvents, FootballScheduleCronBuilder } from "cronjobs"
 import dayjs from 'dayjs'
 import { v2 as cloudinary } from "cloudinary"
 
@@ -16,6 +16,7 @@ import { v2 as cloudinary } from "cloudinary"
 dayjs.extend(utc)
 dayjs.extend(timezone)
 cloudinary.config({ api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET, cloud_name: process.env.CLOUDINARY_CLOUD_NAME })
+
 
 Sentry.init({
     dsn: "https://2faaad8d19ae0928c559d1ff0e81f093@o4504167984136192.ingest.us.sentry.io/4508274805374976",
@@ -28,6 +29,7 @@ buildDaddyLiveCatalog.start()
 fetchFootballFixturesCron.start()
 fetchRapidFootballEvents.start()
 FootballScheduleCronBuilder.start()
+// fetchRapidEventsLink.start()
 serveHTTP(addonInterface, { port: Number(process.env.PORT ?? 56397),cacheMaxAge: 60  })
 
 // when you've deployed your addon, un-comment this line

@@ -58,8 +58,8 @@ export async function createEventPoster(homeLogo: string, awayLogo: string): Pro
 
 export async function createFootbalPoster({ homeTeam, awayTeam, league }: { homeTeam: string, awayTeam: string, league: string }) {
     try {
-        const posterWidth = 800; // in pixels
-        const posterHeight = 400; // in pixels
+        const posterWidth = 1280; // in pixels
+        const posterHeight = 720; // in pixels
 
         // Image dimensions and gap
         const smallImageWidth = 180;
