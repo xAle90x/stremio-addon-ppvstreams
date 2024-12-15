@@ -588,6 +588,11 @@
   resolved "https://registry.yarnpkg.com/@types/shimmer/-/shimmer-1.2.0.tgz#9b706af96fa06416828842397a70dfbbf1c14ded"
   integrity sha512-UE7oxhQLLd9gub6JKIAhDq06T0F6FnztwMNRvYgjeQSBeMc1ZG/tA47EwfduvkuQS8apbkM/lpLpWsaCeYsXVg==
 
+"@types/similarity@^1.2.3":
+  version "1.2.3"
+  resolved "https://registry.yarnpkg.com/@types/similarity/-/similarity-1.2.3.tgz#3e4e5a334fb1d1b072a562f85ace665eab3eb3f8"
+  integrity sha512-fvGaWLqZzhmKhvs/qkoc1YV3a+1kwPrUt3M2CVwOwthkBmhVT9uqas0vI6Akrdysu4BVed5ZaImpFiofDvdrPw==
+
 "@types/stremio-addon-sdk@^1.6.11":
   version "1.6.11"
   resolved "https://registry.yarnpkg.com/@types/stremio-addon-sdk/-/stremio-addon-sdk-1.6.11.tgz#5dd824459d6a36cebbb50c4a2e08ed62b475da13"
@@ -1865,6 +1870,11 @@ keyv@^4.5.4:
   dependencies:
     json-buffer "3.0.1"
 
+levenshtein-edit-distance@^2.0.0:
+  version "2.0.5"
+  resolved "https://registry.yarnpkg.com/levenshtein-edit-distance/-/levenshtein-edit-distance-2.0.5.tgz#a066eca8afb350e4d9054aed9ffeef66e78ffc83"
+  integrity sha512-Yuraz7QnMX/JENJU1HA6UtdsbhRzoSFnGpVGVryjQgHtl2s/YmVgmNYkVs5yzVZ9aAvQR9wPBUH3lG755ylxGA==
+
 levn@^0.4.1:
   version "0.4.1"
   resolved "https://registry.yarnpkg.com/levn/-/levn-0.4.1.tgz#ae4562c007473b932a6200d403268dd2fffc6ade"
@@ -2673,6 +2683,13 @@ signal-exit@^4.0.1:
   version "4.1.0"
   resolved "https://registry.yarnpkg.com/signal-exit/-/signal-exit-4.1.0.tgz#952188c1cbd546070e2dd20d0f41c0ae0530cb04"
   integrity sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==
+
+similarity@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/similarity/-/similarity-1.2.1.tgz#58eed40bc90742434abcf1b8e0b9af63241fb3dd"
+  integrity sha512-lMOpWVaWrTnyL+tkvDs8oGV/KAUBQ3wfbZtdiwDcC+KYGlwO8kgtiyag1B6akAjALDMwn5rN5YHHei1hr4X7nw==
+  dependencies:
+    levenshtein-edit-distance "^2.0.0"
 
 simple-concat@^1.0.0:
   version "1.0.1"
