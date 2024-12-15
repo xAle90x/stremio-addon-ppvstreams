@@ -87,8 +87,8 @@ export const fetchFootballFixturesCron = new CronJob("45 03 * * *", async () => 
 
 const EventsApiCronWithCheckIn = Sentry.cron.instrumentCron(CronJob, "fetchRapidFootballEvents")
 
-export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("30 13 * * *", async () => {
-    const footabllEvents = await fetchfootballLiveStreamEvents()
+export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("30 14 * * *", async () => {
+    const footabllEvents = await fetchfootballLiveStreamEvents()    
     await saveToCache("rapid-football-events", JSON.stringify(footabllEvents), 26 * 60 * 60)    
 })
 

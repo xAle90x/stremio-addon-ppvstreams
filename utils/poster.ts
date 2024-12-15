@@ -43,7 +43,7 @@ export async function createEventPoster(homeLogo: string, awayLogo: string): Pro
             const stream = new Readable();
             stream.push(buffer);
             stream.push(null)
-            const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream" }, (err, resp) => {
+            const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream-cricket" }, (err, resp) => {
                 resolve(resp?.secure_url ?? "")
             })
             stream.pipe(resulte)
@@ -102,7 +102,7 @@ export async function createFootbalPoster({ homeTeam, awayTeam, league }: { home
                 const stream = new Readable();
                 stream.push(buffer);
                 stream.push(null)
-                const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream" }, (err, resp) => {
+                const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream-soccer" }, (err, resp) => {
                     resolve(resp?.secure_url ?? "")
                 })
                 stream.pipe(resulte)

@@ -136,7 +136,7 @@ export const fetchfootballLiveStreamEvents = async (): Promise<RapidApiLiveFootb
                 'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API,
                 'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
             }
-        })).data['result'] ?? []
+        })).data['result'] ?? []        
         const iteration = events.length > 49 ? 49 : events.length // loop 49 times to only go upto the api limit
         const eventsWithLinks = []
         for (let index = 0; index < iteration; index++) {
@@ -162,7 +162,7 @@ const eventLinkFetcher = async (id: string): Promise<string | null> => {
                 'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API,
                 'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
             }
-        })).data['url']
+        })).data['url']        
         if (link == "") {
             return null
         }
