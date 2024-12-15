@@ -151,7 +151,7 @@ export const fetchRapidFootballeventLink = async (id: string): Promise<string | 
             method: 'GET',
             url: `https://football-live-stream-api.p.rapidapi.com/link/${id}`,
             headers: {
-                'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API,
+                'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API_2,
                 'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
             }
         })).data['url']        

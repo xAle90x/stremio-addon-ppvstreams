@@ -103,11 +103,13 @@ export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("*/28 * * *
         const events = await fetchfootballLiveStreamEvents()
         for (let index = 0; index < events.length; index++) {
             const a = events[index]
+            const [day, month, year] = a.date.split("/")
+            const date = dayjs.tz(`${year}-${month}-${day} ${a.time}`, 'Asia/Yangon').utc().unix()
             await prismaClient.rapidFootballCatalogue.upsert({
                 where: {
                     eventId: a.id
                 },
-                create: { awayTeam: a.away_name, eventId: a.id, homeTeam: a.home_name, name: `${a.home_name} vs ${a.away_name}`, status: a.status },
+                create: { awayTeam: a.away_name, eventId: a.id, homeTeam: a.home_name, name: `${a.home_name} vs ${a.away_name}`, status: a.status, date: date },
                 update: { status: a.status }
             })
         }
@@ -121,11 +123,25 @@ export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("*/28 * * *
 export const fetchRapidEventsLink = new CronJob("*/15 * * * *", async () => {
     try {
         await prismaClient.$connect()
-        const missingLinks = await prismaClient.rapidFootballCatalogue.findMany({
+        const currentTime = dayjs().utc().unix()
+        const events = await prismaClient.rapidFootballCatalogue.findMany({
             where: {
                 link: {
                     isSet: false
-                }
+                },
+            },
+
+        })
+        const missingLinks = events.filter((event) => {
+            const endTime = dayjs.unix(event.date).utc().unix()
+            // check event has not ended
+            if (currentTime > endTime) {
+                return false
+            } else {
+                // check event has started
+                if (currentTime >= event.date || currentTime >= dayjs.unix(event.date).utc().unix()) {
+                    return true
+                } else return false
             }
         })
         for (let index = 0; index < missingLinks.length; index++) {

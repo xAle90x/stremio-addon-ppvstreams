@@ -5,8 +5,8 @@ import { Readable } from "node:stream";
 import * as Sentry from "@sentry/node"
 
 export async function createEventPoster(homeLogo: string, awayLogo: string): Promise<string> {
-    const canvasWidth = 800; // Width of the poster
-    const canvasHeight = 400; // Height of the poster
+    const canvasWidth = 1280; // Width of the poster
+    const canvasHeight = 720; // Height of the poster
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
 
@@ -21,8 +21,8 @@ export async function createEventPoster(homeLogo: string, awayLogo: string): Pro
     const logoB = await loadImage(imageB.data);
 
     // Resize logos if needed
-    const logoWidth = 200; // Desired logo width
-    const logoHeight = 180; // Desired logo height
+    const logoWidth = 300; // Desired logo width
+    const logoHeight = 300; // Desired logo height
 
     // Calculate positions to center the logos with space between them
     const totalSpace = canvasWidth - 2 * logoWidth; // Space for two logos
@@ -62,11 +62,11 @@ export async function createFootbalPoster({ homeTeam, awayTeam, league }: { home
         const posterHeight = 720; // in pixels
 
         // Image dimensions and gap
-        const smallImageWidth = 180;
-        const smallImageHeight = 180;
-        const largeImageWidth = 210;
-        const largeImageHeight = 210;
-        const gap = 20;
+        const smallImageWidth = 300;
+        const smallImageHeight = 300;
+        const largeImageWidth = 280;
+        const largeImageHeight = 280;
+        const gap = 120;
         const canvas = createCanvas(posterWidth, posterHeight);
         const ctx = canvas.getContext('2d');
 
@@ -75,7 +75,7 @@ export async function createFootbalPoster({ homeTeam, awayTeam, league }: { home
         ctx.fillRect(0, 0, posterWidth, posterHeight);
 
         // Load the images
-        const [img1, img2, img3] = [await loadImage((await axios.get(homeTeam, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(league, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(awayTeam, { responseType: "arraybuffer" })).data)]        
+        const [img1, img2, img3] = [await loadImage((await axios.get(homeTeam, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(league, { responseType: "arraybuffer" })).data), await loadImage((await axios.get(awayTeam, { responseType: "arraybuffer" })).data)]
         // Calculate positions for the images
         const centerX = posterWidth / 2;
         const centerY = posterHeight / 2;

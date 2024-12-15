@@ -25,6 +25,7 @@ export const getPpvLandFootballEvents = async ({ search }: { search?: string }):
             poster: resp.poster,
             posterShape: 'landscape',
             logo: resp.poster,
+
         }))
     }
     transaction.end()
@@ -51,7 +52,7 @@ export const getFootballCatalog = async ({ search }: { search?: string }): Promi
             // Convert end time to milliseconds
             return (startsAtMs <= now && now < endTime) || // Currently in progress and not ended
                 (startsAtMs > now && startsAtMs <= thirtyMinutes); // Starts within 30 minutes
-        }).map((a) => (<MetaPreview>{ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name }))
+        }).map((a) => (<MetaPreview>{ id: a.id, name: a.name, type: "tv", posterShape: "landscape", poster: a.poster, logo: a.poster, background: a.poster, description: a.name, }))
         if (search) {
             return catalog.filter((a) => a.name.match(RegExp(search, 'gi')))
         }
