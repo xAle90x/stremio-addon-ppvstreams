@@ -131,9 +131,9 @@ export const fetchRapidEventsLink = new CronJob("*/15 * * * *", async () => {
                 },
             },
 
-        })
+        })        
         const missingLinks = events.filter((event) => {
-            const endTime = dayjs.unix(event.date).utc().unix()
+            const endTime = dayjs.unix(event.date).add(145,'minutes').utc().unix()
             // check event has not ended
             if (currentTime > endTime) {
                 return false
@@ -143,9 +143,9 @@ export const fetchRapidEventsLink = new CronJob("*/15 * * * *", async () => {
                     return true
                 } else return false
             }
-        })
-        for (let index = 0; index < missingLinks.length; index++) {
-            const link = await fetchRapidFootballeventLink(missingLinks[index].eventId)
+        })        
+        for (let index = 0; index < missingLinks.length; index++) {            
+            const link = await fetchRapidFootballeventLink(missingLinks[index].eventId)            
             if (link != null && link != "")
                 await prismaClient.rapidFootballCatalogue.update({
                     where: {

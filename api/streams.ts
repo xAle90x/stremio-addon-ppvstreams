@@ -147,19 +147,20 @@ export const fetchfootballLiveStreamEvents = async (): Promise<RapidApiLiveFootb
 
 export const fetchRapidFootballeventLink = async (id: string): Promise<string | null> => {
     try {
-        const link = (await axios.request({
+        const repsonse = (await axios.request({
             method: 'GET',
             url: `https://football-live-stream-api.p.rapidapi.com/link/${id}`,
             headers: {
                 'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API_2,
                 'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
             }
-        })).data['url']        
+        }))        
+        const link = repsonse.data['url']
         if (link == "") {
             return null
         }
         return link
-    } catch (error) {
+    } catch (error) {        
         Sentry.captureException(error)
         return null
     }
