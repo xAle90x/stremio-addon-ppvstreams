@@ -21,7 +21,7 @@ cloudinary.config({ api_key: process.env.CLOUDINARY_API_KEY, api_secret: process
 
 
 Sentry.init({
-    dsn: "https://2faaad8d19ae0928c559d1ff0e81f093@o4504167984136192.ingest.us.sentry.io/4508274805374976",
+    dsn: "https://9e8a5e40a23ee3aba0e5f4321f2482c4@o4508483665330176.ingest.us.sentry.io/4508483668279296",
     integrations: [nodeProfilingIntegration()],
 
     // Tracing
