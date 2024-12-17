@@ -1,8 +1,11 @@
 import axios from "axios";
 import { createCanvas, loadImage } from "canvas"
-import { v2 as cloudinary } from 'cloudinary'
-import { Readable } from "node:stream";
+// import { v2 as cloudinary } from 'cloudinary'
+// import { Readable } from "node:stream";
 import * as Sentry from "@sentry/node"
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { randomUUID } from "node:crypto";
 
 export async function createEventPoster(homeLogo: string, awayLogo: string): Promise<string> {
     const canvasWidth = 1280; // Width of the poster
@@ -37,22 +40,25 @@ export async function createEventPoster(homeLogo: string, awayLogo: string): Pro
     ctx.drawImage(logoB, xB, yCenter, logoWidth, logoHeight);
 
     // Save the canvas as an image file
-    const url: string = await new Promise((resolve) => {
-        try {
-            const buffer = canvas.toBuffer('image/png');
-            const stream = new Readable();
-            stream.push(buffer);
-            stream.push(null)
-            const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream-cricket" }, (err, resp) => {
-                resolve(resp?.secure_url ?? "")
-            })
-            stream.pipe(resulte)
-        } catch (error) {
-            Sentry.captureException(error)
-            resolve("https://placehold.co/600x400.png")
-        }
-    })
-    return url
+    const buffer = canvas.toBuffer('image/png');
+    const path = `${randomUUID()}.png`
+    writeFileSync(join(process.cwd(), "public", "poster", path), buffer)
+    // const url: string = await new Promise((resolve) => {
+    //     try {
+
+    //         const stream = new Readable();
+    //         stream.push(buffer);
+    //         stream.push(null)
+    //         const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream-cricket" }, (err, resp) => {
+    //             resolve(resp?.secure_url ?? "")
+    //         })
+    //         stream.pipe(resulte)
+    //     } catch (error) {
+    //         Sentry.captureException(error)
+    //         resolve("https://placehold.co/600x400.png")
+    //     }
+    // })
+    return path
 
 }
 
@@ -95,23 +101,26 @@ export async function createFootbalPoster({ homeTeam, awayTeam, league }: { home
         ctx.drawImage(img3, img3X, img3Y, smallImageWidth, smallImageHeight);
 
         // Save the canvas to a file
+        const buffer = canvas.toBuffer('image/png');
+        const path = `${randomUUID()}.png`
+        writeFileSync(join(process.cwd(), "public", "poster", path), buffer)
+        // const url: string = await new Promise((resolve) => {
+        //     try {
 
-        const url: string = await new Promise((resolve) => {
-            try {
-                const buffer = canvas.toBuffer('image/png');
-                const stream = new Readable();
-                stream.push(buffer);
-                stream.push(null)
-                const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream-soccer" }, (err, resp) => {
-                    resolve(resp?.secure_url ?? "")
-                })
-                stream.pipe(resulte)
-            } catch (error) {
-                Sentry.captureException(error)
-                resolve("https://placehold.co/600x400.png")
-            }
-        })
-        return url
+        //         const stream = new Readable();
+        //         stream.push(buffer);
+        //         stream.push(null)
+        //         const resulte = cloudinary.uploader.upload_stream({ folder: "ppvstream-soccer" }, (err, resp) => {
+        //             resolve(resp?.secure_url ?? "")
+        //         })
+        //         stream.pipe(resulte)
+        //     } catch (error) {
+        //         Sentry.captureException(error)
+        //         resolve("https://placehold.co/600x400.png")
+        //     }
+        // })
+        // return url
+        return path
     } catch (error) {
         Sentry.captureException(error)
         return ""

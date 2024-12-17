@@ -77,20 +77,20 @@ export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
     }
 })
 
-export const fetchFootballFixturesCron = new CronJob("45 03 * * *", async () => {
+export const fetchFootballFixturesCron = new CronJob("00 05 * * *", async () => {
     try {
         const footballEvents = await fetchFootballHighlightEvents()
-        const events = await footballEvents.reduce(async (all: Promise<IFootballEvent[]>, current) => {
+        const events = await footballEvents.reduce(async (all: Promise<IFootballEvent[]>, current) => {            
             const total = await all
             const poster = await createFootbalPoster({
                 homeTeam: current.homeTeam.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
                 awayTeam: current?.awayTeam?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
                 league: current?.league?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images"
             })
-            total.push({ awayTeam: current.awayTeam.name ?? "Away team", homeTeam: current.homeTeam.name ?? "Home team", poster, id: current.id.toString(), league: current?.league?.name ?? "League", name: `${current?.homeTeam?.name} vs ${current?.awayTeam?.name}`, time: dayjs.tz(current.date).utc(true).unix(), logo: current.league.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images" })
+            total.push({ awayTeam: current.awayTeam.name ?? "Away team", homeTeam: current.homeTeam.name ?? "Home team", poster, id: current.id.toString(), league: current?.league?.name ?? "League", name: `${current?.homeTeam?.name} vs ${current?.awayTeam?.name}`, time: dayjs.tz(current.date).utc(true).unix(), logo: current.league.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images" })            
             return total
         }, Promise.resolve([]))
-        await saveToCache('football-highlight-events', JSON.stringify(events), 26 * 60 * 60)
+        await saveToCache('football-highlight-events', JSON.stringify(events), 26 * 60 * 60)        
     } catch (error) {
         Sentry.captureException(error)
     }
@@ -161,7 +161,7 @@ export const fetchRapidEventsLink = new CronJob("*/15 * * * *", async () => {
 })
 
 export const FootballScheduleCronBuilder = new CronJob("*/10 * * * *", async () => {
-    try {
+    try {        
         const currentTime = dayjs().utc().unix()
         await prismaClient.$connect()
         const daddyLiveEvent: IDaddyliveEvent[] = ((await getFromCache('catalog')) as IDaddyliveEvent[]).filter((a) => a.type == "football" || a.type == "soccer")
@@ -188,11 +188,11 @@ export const FootballScheduleCronBuilder = new CronJob("*/10 * * * *", async () 
 
         const footballEvents = await footballHighlightEvents.reduce(async (promise: Promise<IFootballEventCatalog[]>, current) => {
             // daddylive streams
-            const total = await promise
+            const total = await promise            
             const daddyliveStreams = daddyLiveEvent.find((a) => {
                 const teams = a.name.split(":")?.at(-1)
-                const [homeTeam, awayTeam] = teams!.split("vs")
-                return (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.9) || (similarity(current.awayTeam.trim(), awayTeam.trim()) > 0.9)
+                const [homeTeam, awayTeam] = teams!.split("vs")                
+                return (similarity(current.homeTeam.trim(), homeTeam?.trim()) > 0.9) || (similarity(current.awayTeam?.trim(), awayTeam?.trim()) > 0.9)
             })?.streams ?? []
             // ppv land exits
             const streams: Stream[] = []
@@ -205,7 +205,9 @@ export const FootballScheduleCronBuilder = new CronJob("*/10 * * * *", async () 
                 const stream = await getPPvLandStreams(existsPvvLand.id)
                 streams.push(...stream)
             }
-            const rapidStreams = rapidApiEvents.find((a) => similarity(a.homeTeam?.trim(), current.homeTeam?.trim()) > 0.8 || similarity(a.awayTeam?.trim(), current.awayTeam?.trim()))
+            const rapidStreams = rapidApiEvents.find((a) => {                
+                return similarity(a.homeTeam?.trim(), current.homeTeam?.trim()) > 0.8 || similarity(a.awayTeam?.trim(), current.awayTeam?.trim()) > 0.8
+            })
             if (daddyliveStreams != null && daddyliveStreams?.length > 0) {
                 streams.push(...daddyliveStreams)
             }
@@ -224,9 +226,9 @@ export const FootballScheduleCronBuilder = new CronJob("*/10 * * * *", async () 
                 total.push(event)
             }
             return total
-        }, Promise.resolve([]))
+        }, Promise.resolve([]))        
         saveToCache('football-catalog', JSON.stringify(footballEvents), 12 * 60 * 60)
-    } catch (error) {
+    } catch (error) {        
         Sentry.captureException(error)
     }
     // for each event reduce and build catalog
