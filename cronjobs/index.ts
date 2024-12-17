@@ -36,7 +36,7 @@ export interface IFootballEvent {
 }
 
 const DaddyliveCronjob = Sentry.cron.instrumentCron(CronJob, "daddyliveCronjobs")
-export const buildDaddyLiveCatalog = new DaddyliveCronjob("0 1,8,16 * * *", async () => {
+export const buildDaddyLiveCatalog = new DaddyliveCronjob("0 1,8,16,20 * * *", async () => {
     try {
         const channels = await fetchWorldWideSportStreams()
         const events = (await fetchDaddyliveSchedule())
