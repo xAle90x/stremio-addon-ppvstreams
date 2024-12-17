@@ -8,7 +8,7 @@ import { cricketRapidApiSchedule } from "catalogs/cricket"
 import { createEventPoster, createFootbalPoster } from "utils/poster"
 import dayjs from "dayjs"
 import * as Sentry from "@sentry/node"
-import { IFootballEventCatalog, RapidApiLiveFootballEvent } from "types"
+import { IFootballEventCatalog } from "types"
 import { getPpvLandFootballEvents } from "catalogs/football"
 import similarity from "similarity"
 import { PrismaClient } from "@prisma/client"
@@ -32,6 +32,7 @@ export interface IFootballEvent {
     league: string
     time: number
     poster?: string
+    logo?: string
 }
 
 export const buildDaddyLiveCatalog = new CronJob("0 1,8,16 * * *", async () => {
@@ -86,7 +87,7 @@ export const fetchFootballFixturesCron = new CronJob("45 03 * * *", async () => 
                 awayTeam: current?.awayTeam?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images",
                 league: current?.league?.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images"
             })
-            total.push({ awayTeam: current.awayTeam.name ?? "Away team", homeTeam: current.homeTeam.name ?? "Home team", poster, id: current.id.toString(), league: current?.league?.name ?? "League", name: `${current?.homeTeam?.name} vs ${current?.awayTeam?.name}`, time: dayjs.tz(current.date).utc(true).unix() })
+            total.push({ awayTeam: current.awayTeam.name ?? "Away team", homeTeam: current.homeTeam.name ?? "Home team", poster, id: current.id.toString(), league: current?.league?.name ?? "League", name: `${current?.homeTeam?.name} vs ${current?.awayTeam?.name}`, time: dayjs.tz(current.date).utc(true).unix(), logo: current.league.logo ?? "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse4.mm.bing.net%2Fth%3Fid%3DOIP.J7c3mMFEqPKkJdxMXNjAqwHaHa%26pid%3DApi&f=1&ipt=e85dcca1a0889f6198b1c6e98144bb1147b4dbe8371c2d4b9d110b53be47a2bd&ipo=images" })
             return total
         }, Promise.resolve([]))
         await saveToCache('football-highlight-events', JSON.stringify(events), 26 * 60 * 60)
@@ -131,9 +132,9 @@ export const fetchRapidEventsLink = new CronJob("*/15 * * * *", async () => {
                 },
             },
 
-        })        
+        })
         const missingLinks = events.filter((event) => {
-            const endTime = dayjs.unix(event.date).add(145,'minutes').utc().unix()
+            const endTime = dayjs.unix(event.date).add(145, 'minutes').utc().unix()
             // check event has not ended
             if (currentTime > endTime) {
                 return false
@@ -143,9 +144,9 @@ export const fetchRapidEventsLink = new CronJob("*/15 * * * *", async () => {
                     return true
                 } else return false
             }
-        })        
-        for (let index = 0; index < missingLinks.length; index++) {            
-            const link = await fetchRapidFootballeventLink(missingLinks[index].eventId)            
+        })
+        for (let index = 0; index < missingLinks.length; index++) {
+            const link = await fetchRapidFootballeventLink(missingLinks[index].eventId)
             if (link != null && link != "")
                 await prismaClient.rapidFootballCatalogue.update({
                     where: {
@@ -159,14 +160,32 @@ export const fetchRapidEventsLink = new CronJob("*/15 * * * *", async () => {
     }
 })
 
-export const FootballScheduleCronBuilder = new CronJob("*/30 * * * *", async () => {
+export const FootballScheduleCronBuilder = new CronJob("*/10 * * * *", async () => {
     try {
+        const currentTime = dayjs().utc().unix()
         await prismaClient.$connect()
-        const footballHighlightEvents: IFootballEvent[] = await getFromCache('football-highlight-events') ?? []
-        const rapidApiEvents: RapidApiLiveFootballEvent[] = await getFromCache('rapid-football-events') ?? []
-        const ppvLandFootballFixture = await getPpvLandFootballEvents({})
-        // const ppvLandMissing = []
         const daddyLiveEvent: IDaddyliveEvent[] = ((await getFromCache('catalog')) as IDaddyliveEvent[]).filter((a) => a.type == "football" || a.type == "soccer")
+        const footballHighlightEvents: IFootballEvent[] = await getFromCache('football-highlight-events') ?? []
+        const rapidApiEvents = (await prismaClient.rapidFootballCatalogue.findMany({
+            where: {
+                link: {
+                    isSet: true
+                }
+            }
+        })).filter((event) => {
+            const endTime = dayjs.unix(event.date).add(145, 'minutes').utc().unix()
+            // check event has not ended
+            if (currentTime > endTime) {
+                return false
+            } else {
+                // check event has started
+                if (currentTime >= event.date || currentTime >= dayjs.unix(event.date).utc().unix()) {
+                    return true
+                } else return false
+            }
+        })
+        const ppvLandFootballFixture = await getPpvLandFootballEvents({})
+
         const footballEvents = await footballHighlightEvents.reduce(async (promise: Promise<IFootballEventCatalog[]>, current) => {
             // daddylive streams
             const total = await promise
@@ -177,17 +196,21 @@ export const FootballScheduleCronBuilder = new CronJob("*/30 * * * *", async () 
             })?.streams ?? []
             // ppv land exits
             const streams: Stream[] = []
-            const existsPvvLand = ppvLandFootballFixture.find((a) => a.name.match(RegExp(`${current.homeTeam} vs ${current.awayTeam}`, 'gi')))
+            const existsPvvLand = ppvLandFootballFixture.find((a) => {
+                const teams = a.name.split(":")?.at(-1)
+                const [homeTeam, awayTeam] = teams!.split("vs")
+                return (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.9) || (similarity(current.awayTeam.trim(), awayTeam.trim()) > 0.9)
+            })
             if (existsPvvLand) {
                 const stream = await getPPvLandStreams(existsPvvLand.id)
                 streams.push(...stream)
             }
-            const rapidStreams = rapidApiEvents.find((a) => a.home_name.trim().match(RegExp(current.homeTeam.trim(), 'gi')))
+            const rapidStreams = rapidApiEvents.find((a) => similarity(a.homeTeam?.trim(), current.homeTeam?.trim()) > 0.8 || similarity(a.awayTeam?.trim(), current.awayTeam?.trim()))
             if (daddyliveStreams != null && daddyliveStreams?.length > 0) {
                 streams.push(...daddyliveStreams)
             }
             if (rapidStreams) {
-                streams.push({ name: current.name, externalUrl: rapidStreams.link, title: "SD", url: rapidStreams.link, behaviorHints: { notWebReady: true } })
+                streams.push({ name: current.name, externalUrl: rapidStreams.link!, title: "SD", url: rapidStreams.link!, behaviorHints: { notWebReady: true } })
             }
             if (streams.length > 0) {
                 const event: IFootballEventCatalog = {
