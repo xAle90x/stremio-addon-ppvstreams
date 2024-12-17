@@ -16,8 +16,7 @@ export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
             const matches = cacheExist as IDaddyliveEvent[]
             const filtered = matches.filter((a) => {
                 if (a.type == "cricket") {
-                    const startsAtMs = a.time
-                    console.log(thirtyMinutes)
+                    const startsAtMs = a.time                    
                     if ((startsAtMs <= now) || (startsAtMs > now && startsAtMs <= thirtyMinutes)) {
                         return true
                     }
@@ -36,8 +35,7 @@ export const cricketCatalogBuilder = async (): Promise<MetaPreview[]> => {
             return filtered
         }
 
-    } catch (error) {
-        console.log(error)
+    } catch (error) {    
         Sentry.captureException(error)
         return []
     }
