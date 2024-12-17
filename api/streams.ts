@@ -145,13 +145,13 @@ export const fetchfootballLiveStreamEvents = async (): Promise<RapidApiLiveFootb
     }
 }
 
-export const fetchRapidFootballeventLink = async (id: string): Promise<string | null> => {
+export const fetchRapidFootballeventLink = async (id: string,apiKey: string): Promise<string | null> => {
     try {
         const repsonse = (await axios.request({
             method: 'GET',
             url: `https://football-live-stream-api.p.rapidapi.com/link/${id}`,
             headers: {
-                'x-rapidapi-key': process.env.RAPID_LIVE_FOOTBALL_API_2,
+                'x-rapidapi-key': apiKey,
                 'x-rapidapi-host': 'football-live-stream-api.p.rapidapi.com'
             }
         }))        
@@ -165,6 +165,7 @@ export const fetchRapidFootballeventLink = async (id: string): Promise<string | 
         return null
     }
 }
+
 
 export async function getPPvLandStreams(id: string): Promise<StremioStream[]> {
     try {

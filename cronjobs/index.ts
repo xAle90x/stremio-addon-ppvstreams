@@ -108,13 +108,32 @@ export const fetchRapidFootballEvents = new EventsApiCronWithCheckIn("*/28 * * *
             const a = events[index]
             const [day, month, year] = a.date.split("/")
             const date = dayjs.tz(`${year}-${month}-${day} ${a.time}`, 'Asia/Yangon').utc().unix()
-            await prismaClient.rapidFootballCatalogue.upsert({
+            // check if event exist
+            const event = await prismaClient.rapidFootballCatalogue.findUnique({
                 where: {
                     eventId: a.id
-                },
-                create: { awayTeam: a.away_name, eventId: a.id, homeTeam: a.home_name, name: `${a.home_name} vs ${a.away_name}`, status: a.status, date: date },
-                update: { status: a.status }
+                }
             })
+            // if event exists update
+            if (event) {
+                if (!event.link && a.status == "Live") {
+                    const url = await fetchRapidFootballeventLink(event.id, process.env.RAPID_LIVE_FOOTBALL_API_3!)
+                    if (url && url != "") {
+                        await prismaClient.rapidFootballCatalogue.update({
+                            where: {
+                                id: event.id
+                            },
+                            data: {
+                                link: url
+                            }
+                        })
+                    }
+                }
+            } else {
+                await prismaClient.rapidFootballCatalogue.create({
+                    data: { awayTeam: a.away_name, eventId: a.id, homeTeam: a.home_name, name: `${a.home_name} vs ${a.away_name}`, status: a.status, date: date },
+                })
+            }
         }
 
         await prismaClient.$disconnect()
@@ -149,7 +168,7 @@ export const fetchRapidEventsLink = new FetchRapidEventCron("*/15 * * * *", asyn
             }
         })
         for (let index = 0; index < missingLinks.length; index++) {
-            const link = await fetchRapidFootballeventLink(missingLinks[index].eventId)
+            const link = await fetchRapidFootballeventLink(missingLinks[index].eventId, process.env.RAPID_LIVE_FOOTBALL_API_2!)
             if (link != null && link != "")
                 await prismaClient.rapidFootballCatalogue.update({
                     where: {
