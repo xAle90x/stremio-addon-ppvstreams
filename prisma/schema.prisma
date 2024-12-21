@@ -28,4 +28,26 @@ model RapidFootballCatalogue {
   @@map("rapidfootball")
 }
 
+model NhlCatalog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  logo      String
+  homeTeam  String
+  awayeTeam String
+  date      String
+  links     Stream[] @relation("NhlCatalogStreams")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@map("nhlcatalog")
+}
+
+model Stream {
+  id           String      @id @map("_id") @db.ObjectId
+  nhlCatalogId String?     @db.ObjectId
+  nhlCatalog   NhlCatalog? @relation("NhlCatalogStreams", fields: [nhlCatalogId], references: [id], onDelete: Cascade)
+  link         String
+  name         String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}

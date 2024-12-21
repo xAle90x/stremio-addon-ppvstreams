@@ -127,7 +127,25 @@ export interface IFootballEventCatalog {
     name: string
     description: string
     poster: string
-    streams: StremioStream []
+    streams: StremioStream[]
 }
 
 export type Status = "Live" | "Uncoming";
+
+export interface NhlCatalog {
+    id: number;
+    seasonId: number;
+    commonName: CommonName;
+    abbrev: string;
+    name: CommonName;
+    placeNameWithPreposition: CommonName;
+    placeName: CommonName;
+    logo: string;
+    darkLogo: string;
+    french: boolean;
+}
+
+export interface CommonName {
+    default: string;
+    fr?: string;
+}

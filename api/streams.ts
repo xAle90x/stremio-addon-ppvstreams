@@ -2,7 +2,7 @@
 import * as Sentry from "@sentry/node"
 import axios from "axios";
 import dayjs from "dayjs";
-import { FootballHighlightEvent, IPPLandStreamDetails, RapidApiLiveFootballEvent } from "types";
+import { FootballHighlightEvent, IPPLandStreamDetails, NhlCatalog, RapidApiLiveFootballEvent } from "types";
 import { getFromCache, saveToCache } from "utils/redis";
 import { Stream as StremioStream } from "stremio-addon-sdk";
 interface DaddyliveStream {
@@ -185,4 +185,15 @@ export async function getPPvLandStreams(id: string): Promise<StremioStream[]> {
         Sentry.captureException(error)
         return []
     }
+}
+
+export async function getNhlSchedule(date:Date):Promise<NhlCatalog []> {
+    try {
+        const queryDate =dayjs(date).format('YYYY-MM-DD')
+        const response:NhlCatalog [] = (await axios.get(`https://api-web.nhle.com/v1/schedule-calendar/${queryDate}`)).data?.teams ?? []
+        return response
+    } catch (error) {
+        Sentry.captureException(error)
+        return []
+    }    
 }
