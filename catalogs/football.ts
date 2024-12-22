@@ -6,6 +6,7 @@ import { getFromCache } from "utils/redis";
 // get ppv land footballEvents
 
 export const getPpvLandFootballEvents = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
+    try {
     const transaction = Sentry.startSpanManual({ name: `Get football catalogue`, op: "http.server" }, (span) => span)
     const matches = await fetch('https://ppv.land/api/streams')
     const response = await matches.json()
@@ -39,6 +40,10 @@ export const getPpvLandFootballEvents = async ({ search }: { search?: string }):
         posterShape: 'landscape',
         logo: resp.poster,
     }))
+    } catch (err) {
+        Sentry.captureException(err)
+        return []
+    }
 }
 
 export const getFootballCatalog = async ({ search }: { search?: string }): Promise<MetaPreview[]> => {
