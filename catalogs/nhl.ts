@@ -23,9 +23,9 @@ export const cricketCatalogBuilder = async ({search}:{search?:string}):Promise<M
                     })                        
         
                     if (search) {
-                        return filtered.filter((a) => a.name.match(RegExp(search, 'gi')))
+                        return filtered.filter((a) => a.name.match(RegExp(search, 'gi'))).map((a)=>({...a,type:"tv"}))
                     }
-                    return filtered
+                    return filtered.map((a)=>({...a,type:"tv"}))
                 }
         
     } catch (error) {

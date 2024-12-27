@@ -50,4 +50,18 @@ model Stream {
   name         String
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
+
+  @@map("stream")
+}
+
+model Channel {
+  id        String   @id @map("_id") @default(auto()) @db.ObjectId
+  name      String
+  code      String  
+  language String  @default("UK")
+  link      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("channel")
 }

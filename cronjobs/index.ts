@@ -1,9 +1,8 @@
 
-import { fetchDaddyliveSchedule, fetchFootballHighlightEvents, fetchfootballLiveStreamEvents, fetchRapidFootballeventLink, fetchWorldWideSportStreams, getPPvLandStreams } from "api/streams"
+import { fetchDaddyliveSchedule, fetchFootballHighlightEvents, fetchfootballLiveStreamEvents, fetchRapidFootballeventLink, getPPvLandStreams } from "api/streams"
 import { CronJob } from "cron"
 import { getFromCache, saveToCache } from "utils/redis"
 import { Stream } from "stremio-addon-sdk"
-import { compareDaddyliveStreams } from "utils/index"
 import { cricketRapidApiSchedule } from "catalogs/cricket"
 import { createEventPoster, createFootbalPoster } from "utils/poster"
 import dayjs from "dayjs"
@@ -36,17 +35,26 @@ export interface IFootballEvent {
 }
 
 const DaddyliveCronjob = Sentry.cron.instrumentCron(CronJob, "daddyliveCronjobs")
-export const buildDaddyLiveCatalog = new DaddyliveCronjob("0 1,8,16,20 * * *", async () => {
+export const buildDaddyLiveCatalog = new DaddyliveCronjob("27 16 * * *", async () => {
+// export const buildDaddyLiveCatalog = new DaddyliveCronjob("0 1,8,16,20 * * *", async () => {
     try {
-        const channels = await fetchWorldWideSportStreams()
+        await prismaClient.$connect()        
+        console.log("i start")
         const events = (await fetchDaddyliveSchedule())
         const cricket = await cricketRapidApiSchedule()
-        const filtered = await events.reduce(async (totalEvents: Promise<IDaddyliveEvent[]>, current) => {
+        const filtered = await events.reduce(async (totalEvents: Promise<IDaddyliveEvent[]>, current,index) => {
+            
             const total = await totalEvents
             try {
                 // world wide channels is channels
                 // current event channels == current.channels
-                const exists = channels.filter((a) => compareDaddyliveStreams(a.name, current.channels))
+                const exists = await prismaClient.channel.findMany({
+                    where: {
+                        code: {
+                            in: current.channels
+                        }
+                    }
+                })
 
                 if (exists?.length > 0) {
                     if (current.type == "cricket") {
@@ -56,24 +64,28 @@ export const buildDaddyLiveCatalog = new DaddyliveCronjob("0 1,8,16,20 * * *", a
                             const fixture = cricket.find((a) => a.team_a.match(regEx) || a.team_b.match(regEx))
                             if (fixture) {
                                 const poster = await createEventPoster(fixture.team_a_img, fixture.team_b_img)
-                                total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date, poster })
-                            } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
-                        } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
+                                total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a)=>({behaviorHints:{notWebReady: true,},url: a.link,name: a.name,title: a.language,})), time: current.date, poster })
+                            } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a)=>({behaviorHints:{notWebReady: true,},url: a.link,name: a.name,title: a.language,})), time: current.date })
+                        } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a)=>({behaviorHints:{notWebReady: true,},url: a.link,name: a.name,title: a.language,})), time: current.date })
                     } else if (current.type == "soccer") {
                         const [league, teams] = current.name.split(" : ")
                         const [homeTeam, awayTeam] = teams.split("vs")
                         const name = `${league}: ${homeTeam?.trim()} vs ${awayTeam?.trim()}`
-                        total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: name, description: current.name, type: "football", streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
-                    } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a) => a.streams.map((b) => ({ ...b, name: a.name }))).flat(), time: current.date })
+                        total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: name, description: current.name, type: "football", streams: exists.map((a)=>({behaviorHints:{notWebReady: true,},url: a.link,name: a.name,title: a.language,})), time: current.date })
+                    } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a)=>({behaviorHints:{notWebReady: true,},url: a.link,name: a.name,title: a.language,})), time: current.date })
                 }
+                console.log(`Finished ${index} of ${total.length}`)
                 return total
             } catch (error) {
                 Sentry.captureException(error)
                 return total
             }
         }, Promise.resolve([]))
+        console.log(filtered)
         saveToCache('catalog', JSON.stringify(filtered), 12 * 60 * 60)
+        console.log('catalog built')
     } catch (error) {
+        console.log(error)
         Sentry.captureException(error)
     }
 })

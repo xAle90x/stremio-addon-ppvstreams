@@ -72,7 +72,7 @@ export const fetchDaddyliveSchedule = async (): Promise<DaddyliveSchedule[]> => 
                 for (let index = 0; index < showValue.length; index++) {
                     const event = showValue[index]
                     const kenyaUnixTime = dayjs.tz(`${ukDateTime}${event['time']}:00`, ukTimezone).utc().unix()
-                    events.push({ type, date: kenyaUnixTime, name: event.event, channels: Array.isArray(event.channels) ? event.channels?.map((a: any) => a.channel_name) : Object.values(event.channels)?.map((a: any) => a.channel_name) })
+                    events.push({ type, date: kenyaUnixTime, name: event.event, channels: Array.isArray(event.channels) ? event.channels?.map((a: any) => a.channel_id) : Object.values(event.channels)?.map((a: any) => a.channel_id) })
                 }
             }
         }
