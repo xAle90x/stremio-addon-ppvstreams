@@ -35,16 +35,13 @@ export interface IFootballEvent {
 }
 
 const DaddyliveCronjob = Sentry.cron.instrumentCron(CronJob, "daddyliveCronjobs")
-export const buildDaddyLiveCatalog = new DaddyliveCronjob("27 16 * * *", async () => {
-// export const buildDaddyLiveCatalog = new DaddyliveCronjob("0 1,8,16,20 * * *", async () => {
+export const buildDaddyLiveCatalog = new DaddyliveCronjob("0 1,8,16,20 * * *", async () => {
     try {
-        await prismaClient.$connect()        
-        console.log("i start")
-        const events = (await fetchDaddyliveSchedule())
+        await prismaClient.$connect()                
+        const events = (await fetchDaddyliveSchedule())        
         const cricket = await cricketRapidApiSchedule()
-        const filtered = await events.reduce(async (totalEvents: Promise<IDaddyliveEvent[]>, current,index) => {
-            
-            const total = await totalEvents
+        const filtered = await events.filter((a)=>a.type == "cricket" || a.type == "soccer").reduce(async (totalEvents: Promise<IDaddyliveEvent[]>, current,index) => {
+            const total = await totalEvents            
             try {
                 // world wide channels is channels
                 // current event channels == current.channels
@@ -54,8 +51,7 @@ export const buildDaddyLiveCatalog = new DaddyliveCronjob("27 16 * * *", async (
                             in: current.channels
                         }
                     }
-                })
-
+                })                
                 if (exists?.length > 0) {
                     if (current.type == "cricket") {
                         const awayTeam = (current.name.split("vs")?.at(-1)?.trim())
@@ -74,7 +70,7 @@ export const buildDaddyLiveCatalog = new DaddyliveCronjob("27 16 * * *", async (
                         total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: name, description: current.name, type: "football", streams: exists.map((a)=>({behaviorHints:{notWebReady: true,},url: a.link,name: a.name,title: a.language,})), time: current.date })
                     } else total.push({ id: `wwtv-${current.name.replace(/ /gi, "-").toLowerCase()}`, name: current.name, description: current.name, type: current.type, streams: exists.map((a)=>({behaviorHints:{notWebReady: true,},url: a.link,name: a.name,title: a.language,})), time: current.date })
                 }
-                console.log(`Finished ${index} of ${total.length}`)
+                console.log(`Finished ${index} of ${events.length}`)
                 return total
             } catch (error) {
                 Sentry.captureException(error)
@@ -195,7 +191,7 @@ export const fetchRapidEventsLink = new FetchRapidEventCron("*/15 * * * *", asyn
 })
 
 const FixtureScheduleCron = Sentry.cron.instrumentCron(CronJob, "footballScheduleCronjob")
-export const FootballScheduleCronBuilder = new FixtureScheduleCron("*/10 * * * *", async () => {
+export const FootballScheduleCronBuilder = new FixtureScheduleCron("*/5 * * * *", async () => {
     try {
         const currentTime = dayjs().utc().unix()
         await prismaClient.$connect()
@@ -234,7 +230,7 @@ export const FootballScheduleCronBuilder = new FixtureScheduleCron("*/10 * * * *
             const existsPvvLand = ppvLandFootballFixture.find((a) => {
                 const teams = a.name.split(":")?.at(-1)
                 const [homeTeam, awayTeam] = teams!.split("vs")
-                return (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.9) || (similarity(current.awayTeam.trim(), awayTeam.trim()) > 0.9)
+                return (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.9) || (similarity(current.awayTeam.trim(), awayTeam?.trim()) > 0.9)
             })
             if (existsPvvLand) {
                 const stream = await getPPvLandStreams(existsPvvLand.id)
@@ -264,6 +260,7 @@ export const FootballScheduleCronBuilder = new FixtureScheduleCron("*/10 * * * *
         }, Promise.resolve([]))
         saveToCache('football-catalog', JSON.stringify(footballEvents), 12 * 60 * 60)
     } catch (error) {
+        console.log(error)
         Sentry.captureException(error)
     }
     // for each event reduce and build catalog
