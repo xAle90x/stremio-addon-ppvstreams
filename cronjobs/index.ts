@@ -380,11 +380,9 @@ export const FootballScheduleCronBuilder = new FixtureScheduleCron(
                 const teams = a.name.split(':')?.at(-1)
                 const [homeTeam, awayTeam] = teams!.split('vs')
                 return (
-                  (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.5 &&
+                  (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.5 ||
                     similarity(current.awayTeam.trim(), awayTeam.trim()) >
-                      0.7) ||
-                  (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.7 &&
-                    similarity(current.awayTeam.trim(), awayTeam.trim()) > 0.5)
+                      0.5) 
                 )
               })?.streams ?? []
             // ppv land exits
@@ -395,11 +393,9 @@ export const FootballScheduleCronBuilder = new FixtureScheduleCron(
               const [homeTeam, awayTeam] = teams!.split('vs')
               try {
                 return (
-                  (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.5 &&
+                  (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.5 ||
                     similarity(current.awayTeam.trim(), awayTeam.trim()) >
-                      0.7) ||
-                  (similarity(current.homeTeam.trim(), homeTeam.trim()) > 0.7 &&
-                    similarity(current.awayTeam.trim(), awayTeam.trim()) > 0.5)
+                      0.5)
                 )
               } catch (e) {
                 Sentry.captureException(e)
